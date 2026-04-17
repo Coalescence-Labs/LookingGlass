@@ -1,0 +1,57 @@
+// Original prose written for Looking Glass, 2026.
+// Intentionally thematic — a short essay about reading, memory, and attention —
+// so that the viewport demo is both a technical illustration and a small text
+// worth actually reading. No third-party material is used here.
+
+export const VIEWPORT_TEXT_TITLE = "On Reading a Long Book";
+export const VIEWPORT_TEXT_AUTHOR = "Looking Glass";
+
+export const VIEWPORT_TEXT = `On Reading a Long Book
+A short essay
+
+There is a trick that long books play on the reader, and it is this. You begin on the first page, and for a while you hold the whole thing in your head. You know every name that has been said so far. You know which room the conversation started in, and who was standing near the window, and what weather was pressing against the glass. You feel a kind of completeness, early on, the way a small pond can feel complete because you can see every stone at the bottom of it.
+
+Then the book opens outward. A new character arrives, and takes a name, and the name attaches to a face you will later have to build from context clues. A letter is quoted in full, and then folded back into the drawer of the narrative, and then, fifty pages later, referred to only as "the letter," and you nod, because of course, the letter — though you could no longer produce a single sentence of it if asked. A third cousin is mentioned. A date is given. A house is described from the garden side, and then, a hundred pages on, from the road.
+
+At some point, and you usually do not notice the exact moment, the book becomes too large to hold all at once. You are still reading, and still understanding, and in some sense still in command of the story. But if a friend asked you, on a train, to summarise what happens from pages seventy to one hundred, you would find yourself reaching past the words for a shape. You remember the shape. You do not remember the words.
+
+This is not, I think, a failure of attention. It is simply what a mind does with a text that exceeds it. A good long book is engineered for this. It spends its first pages filling you up, and then, once you are full, it starts quietly replacing its furniture. A character walks off stage, and you carry them forward only as a name and a mood. A setting is described once, thoroughly, and then sketched, ever afterwards, in shorthand. An argument is made, fully, and then reduced to a gesture — a tilt of someone's head that stands in, from now on, for three earlier pages of moral reasoning.
+
+What is left behind in you, as the book moves forward, is a compression. Names thin into colours. Rooms dissolve into a feeling of being indoors. Whole scenes turn, gradually, into weather. And when, a hundred pages later, a sentence arrives that makes sense only if you remember a specific thing said on page twenty-three, the book relies on the shape of your attention, not the inventory of it. You either feel the chime or you do not.
+
+I used to find this embarrassing, as if I were reading the book wrong. I was careful to make notes. I marked small pencil lines beside sentences I suspected would come back. I wrote the names of minor characters on the inside of the jacket, along with a single word that might help me place them later: the cousin, the solicitor, the one with the limp. I thought, with a younger reader's faith, that if I were only attentive enough, I could keep the whole thing in a single clean frame, from first page to last. I was going to be the reader the book was written for.
+
+I was not the reader the book was written for. No one is. A long book is written for an imagined reader who remembers everything and for a real reader who does not, and the real reader is the one the book actually accommodates. The architecture of a serious novel assumes forgetting. It assumes that the third time a room is entered, the reader will half-remember the first two visits and half-furnish the room from habit. It assumes that a phrase repeated across two hundred pages will land as familiar without the reader being quite able to say why. The book is not working against your forgetting; it is working with it. Forgetting is part of the material.
+
+I have come to think of a novel as a window that slides along a much longer piece of text. At any given moment, what is clearly visible to you is only a few pages — the paragraph you are reading, the paragraph just before it, and a dim sense of the ones before that. Further back, things blur. Further forward, nothing yet. The window moves, and the world inside it moves with it, and you are only ever really holding a short strip of prose up to the light.
+
+This is, I think, why a certain kind of reader prefers short books. Short books let the window cover everything. You can read a hundred-page novella and keep the whole thing in your head at once, the way you might keep a room in your head, or a face. A novella is a mind-sized object. A long novel is not. A long novel, like a cathedral, is something you walk through.
+
+It is also, I think, why re-reading is a different activity than reading. When you re-read a long book, the shape is already in you. You do not have to build it from the words; you have to let the words visit the shape. This is why a good second reading often feels more attentive than the first, though you are technically moving your eyes across the same page. The first time, the words had to do two jobs — they had to arrive, and they had to become the shape. The second time, only one. The words can afford, now, to be precise.
+
+And it is, I think, why certain writers are said to reward patience. What they are really rewarding is the willingness to not-know for a hundred pages. They will put something on page twelve that only makes sense on page three hundred and forty, and they are counting on the reader to have forgotten it cleanly enough by then that its return feels like a small revelation. If you remembered page twelve perfectly, page three hundred and forty would land, instead, as a completion — as the closing of a parenthesis you had been dutifully holding open. It would be less surprising. It would be less alive.
+
+So we read with a kind of productive forgetfulness, letting pages drift out behind us as we go. The book is never wholly in our hands. It is, instead, in two places at once — on the paper, where it is complete, and in us, where it is only the last few pages, and a shape, and a feeling of having travelled. The shape is made of what we remembered. The feeling is made of what we forgot.
+
+There is a version of reading, now, in which none of this is true. A machine can hold every page of a novel in its attention at once. It can be asked, at any moment, what is happening on page one hundred and twelve, and it will tell you. It can be asked to list every mention of a colour, or a character, or a particular kind of weather, and the list will be complete. Its window does not slide. Its window is the whole book.
+
+I find this fascinating, and I find it, in a small way, sad. The machine is not reading the book the way the book was written to be read. The book was written to be forgotten, in parts, as it went along. It was written to live, in the reader, as a compression. The machine is doing something else — something closer to surveying a city from the air than walking down one of its streets.
+
+But the machine's way of holding a book is not nothing. It is, in fact, a new thing. It means, for the first time in the history of reading, that a text can be asked questions that no individual human reader could reliably answer, not because the human is inattentive but because the human is human. You can ask such a reader: where, in this novel, does the word "glass" appear, and in what contexts, and what changes about its meaning between the first time and the last? A person can attempt this. A person can, with notes, even manage it. But the machine answers instantly, and exhaustively, and in ways that expose patterns a single reader would need years to find.
+
+This is not the same as understanding the book. I want to be careful about that. A complete index of every mention of "glass" is not an interpretation of the novel; it is raw material for one. The interpretation still has to be made, by somebody, somewhere, who has walked through the book at a human pace, remembering and forgetting, and who knows what it felt like to cross from one chapter into the next.
+
+But the raw material is new, and the raw material is real, and we are going to have to figure out what to do with it. We are going to have to learn, for the first time, how to collaborate with a reader that does not forget. We will bring to the collaboration what we have always brought: the slow shape, the feeling, the pattern built of absences. It will bring what it has: total recall, and the patience to look at any page without preferring any other.
+
+I am not sure yet what we will make together, but I know the ingredients on either side of the table. On one side: a reader who holds the whole text at once and has no preferences about where to look. On the other: a reader who holds only the last few pages clearly, whose preferences shape every glance, and who is always, without meaning to, making a smaller book out of the book in front of them.
+
+It turns out that both of these are ways of reading. It turns out that the human way is not the only way. It turns out, also, that the human way is not obsolete. What makes a book land, as an experience, is still almost entirely the thing the human does — the compression, the private furnishing, the slow accretion of shape. That part is ours.
+
+The machine can, perhaps, help us notice what we compressed. It can hold up, for our inspection, the three passages we half-remembered as one. It can tell us that the room we think we remember was actually described twice, once in spring and once in autumn, and that the version in our head is a hybrid. It can show us, gently, the seams of our own reading.
+
+I am curious about what that will feel like. I am curious about what a novel will become when its readers know that its full text is, always, available to be queried. I am curious whether that will make us read more carefully, or less. I am curious whether we will start to trust the machine's memory of the book more than our own — the way, some years ago, we stopped memorising phone numbers, because we knew the phone would remember.
+
+Some of this will probably be a loss. Some of it will probably be a gain. Most of it will probably be a change, which is what almost all new technologies actually deliver, once the noise dies down — not a clean improvement and not a clear decline, but a reshuffling of what was easy and what was hard, what was intimate and what was public, what was in the mind and what was in the air.
+
+For now, though, and for a little while longer, the long book is still mostly ours to forget. It sits on the shelf, three inches thick, its pages faintly yellowed at the edges. You open it. You read for an hour. You shut it, and put a slip of paper between two pages, and go to bed. In the morning some of what you read will be sharp, and some will be a shape, and some will be gone entirely, and all of that is part of what it means to have read. The window slides forward, and the world inside it moves. The room where you started is no longer visible. You cannot quite remember who was standing near the window, but you know the weather was pressing against the glass, and you know, now, that you are further in.
+`;

@@ -35,7 +35,8 @@ export const concepts: Concept[] = [
     subtitle:
       "A model reads through a sliding viewport. What's inside it, it sees. What falls out, it forgets.",
     kicker: "On memory",
-    status: "coming",
+    status: "live",
+    readingTime: "7 min",
   },
 ];
 
