@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/motion/Reveal";
+import { SourceOutboundLink } from "@/components/site/SourceOutboundLink";
 
 type Card = {
   anchor: string;
@@ -67,14 +68,12 @@ const CARDS: Card[] = [
         very start and the very end of their window than to what is in the
         middle. Buried a key fact in the centre of a 500-page document and the
         model may miss it. The effect was first named by{" "}
-        <a
+        <SourceOutboundLink
           href="https://arxiv.org/abs/2307.03172"
-          target="_blank"
-          rel="noreferrer"
           className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
         >
           Liu et al., 2023
-        </a>
+        </SourceOutboundLink>
         , and has since softened but not vanished in frontier models.
       </>
     ),

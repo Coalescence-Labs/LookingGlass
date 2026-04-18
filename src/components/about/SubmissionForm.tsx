@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { trackSubmissionSent } from "@/lib/analytics";
 
 type State =
   | { kind: "idle" }
@@ -53,6 +54,7 @@ export function SubmissionForm() {
         throw new Error(payload.error || "Something went wrong on our end.");
       }
 
+      trackSubmissionSent();
       setState({ kind: "success" });
       form.reset();
       setKind(null);
