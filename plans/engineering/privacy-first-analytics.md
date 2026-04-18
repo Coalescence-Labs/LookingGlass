@@ -1,9 +1,9 @@
 ---
 title: Engineering — Privacy-respecting analytics
-status: not-started
+status: in-progress
 category: engineering
 effort: S
-last-updated: 2026-04-17
+last-updated: 2026-04-18
 ---
 
 ## Context
@@ -64,13 +64,13 @@ opt out via standard browser signals.
 
 ## Acceptance
 
-- [ ] No cookies set by the analytics library (check DevTools ›
+- [x] No cookies set by the analytics library (check DevTools ›
       Application › Cookies).
-- [ ] `Sec-GPC: 1` request header opts out of tracking.
-- [ ] Outbound click and submission events fire once, not on every
+- [x] `Sec-GPC: 1` request header opts out of tracking.
+- [x] Outbound click and submission events fire once, not on every
       re-render.
-- [ ] About page explains what's collected.
-- [ ] `bun run build` clean.
+- [x] About page explains what's collected.
+- [x] `bun run build` clean.
 
 ## References
 

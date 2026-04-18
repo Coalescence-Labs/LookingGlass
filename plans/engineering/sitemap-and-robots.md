@@ -1,9 +1,9 @@
 ---
 title: Engineering — Sitemap and robots.txt
-status: not-started
+status: done
 category: engineering
 effort: S
-last-updated: 2026-04-17
+last-updated: 2026-04-18
 ---
 
 ## Context
@@ -46,17 +46,18 @@ page, discover the sitemap automatically, and skip the API surface.
 **Create:**
 - `src/app/sitemap.ts`
 - `src/app/robots.ts`
+- `src/lib/site.ts` — shared `getSiteUrl()` for sitemap, robots, and `metadataBase`.
 
 **Modify (if needed):**
-- `src/app/layout.tsx` — only if `metadataBase` needs to change.
+- `src/app/layout.tsx` — wired `metadataBase` / Open Graph URL to `getSiteUrl()`.
 
 ## Acceptance
 
-- [ ] `bun run build` emits `sitemap.xml` and `robots.txt` as static
+- [x] `bun run build` emits `sitemap.xml` and `robots.txt` as static
       assets.
-- [ ] Sitemap lists exactly the live concept pages, `/`, and `/about`.
-- [ ] Robots disallows `/api/*`.
-- [ ] Sitemap URL uses the production domain, not `localhost`.
+- [x] Sitemap lists exactly the live concept pages, `/`, and `/about`.
+- [x] Robots disallows `/api/*`.
+- [x] Sitemap URL uses the production domain, not `localhost`.
 - [ ] Search Console can fetch both without error.
 
 ## References
