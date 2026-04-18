@@ -1,9 +1,9 @@
 ---
 title: Research — Refresh Concept 02 model roster
-status: not-started
+status: done
 category: research
 effort: S
-last-updated: 2026-04-17
+last-updated: 2026-04-18
 ---
 
 ## Context
@@ -58,12 +58,12 @@ open a follow-up PR that updates `src/lib/model-compare.ts` and
 
 ## Acceptance
 
-- [ ] Research file exists and follows `research/README.md` format.
-- [ ] Every row in `MODELS` either verified unchanged or updated with a
+- [x] Research file exists and follows `research/README.md` format.
+- [x] Every row in `MODELS` either verified unchanged or updated with a
       primary-source citation.
-- [ ] `VERIFIED_DATE` matches the research file's date.
-- [ ] `bun run build` clean.
-- [ ] Grok still absent.
+- [x] `VERIFIED_DATE` matches the research file's date.
+- [x] `bun run build` clean.
+- [x] Grok still absent.
 
 ## References
 
@@ -71,3 +71,8 @@ open a follow-up PR that updates `src/lib/model-compare.ts` and
   ai.google.dev/pricing, deepseek.com, huggingface.co/meta-llama,
   mistral.ai/pricing, qwen.ai, moonshot.ai.
 - Internal: `src/lib/model-compare.ts`, `src/lib/context-window.ts`.
+
+## Done
+
+- 2026-04-18 — `research/model-roster-refresh-2026-04-18.md` and
+  `src/lib/model-compare.ts` (`VERIFIED_DATE` and corrected rows per research).
