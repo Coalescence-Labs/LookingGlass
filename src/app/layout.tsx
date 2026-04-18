@@ -27,14 +27,15 @@ const instrument = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL("https://lookingglass.coalescencelabs.app"),
   title: {
-    default: "Looking Glass — making AI legible",
+    default: "Looking Glass — a field guide to things worth understanding",
     template: "%s · Looking Glass",
   },
   description:
-    "Unhurried, visual explainers for the concepts behind modern AI. A project by Coalescence Labs.",
+    "Considered, unhurried explainers of the mechanisms and systems that shape how we live — modern AI first, with the archive wandering from there. A project by Coalescence Labs.",
   openGraph: {
     title: "Looking Glass",
-    description: "Unhurried, visual explainers for the concepts behind modern AI.",
+    description:
+      "A field guide to things worth understanding. Considered, unhurried explainers by Coalescence Labs.",
     url: "https://lookingglass.coalescencelabs.app",
     siteName: "Looking Glass",
     type: "website",
@@ -42,7 +43,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Looking Glass",
-    description: "Unhurried, visual explainers for the concepts behind modern AI.",
+    description:
+      "A field guide to things worth understanding. Considered, unhurried explainers by Coalescence Labs.",
   },
 };
 

@@ -3,7 +3,7 @@ import { SplitWords } from "@/components/motion/SplitWords";
 import { Reveal } from "@/components/motion/Reveal";
 
 type Props = {
-  index: string;
+  index?: string;
   kicker: string;
   title: string;
   lede?: string;
@@ -19,8 +19,12 @@ export function PageHeader({ index, kicker, title, lede }: Props) {
           </Link>
           <span className="text-dim">/</span>
           <span>{kicker}</span>
-          <span className="text-dim">/</span>
-          <span>{index}</span>
+          {index && (
+            <>
+              <span className="text-dim">/</span>
+              <span>{index}</span>
+            </>
+          )}
         </div>
       </Reveal>
 
