@@ -77,11 +77,11 @@ client-side surface, and build/deploy configuration.
 
 ## Acceptance
 
-- [ ] Every checklist item above addressed in the research file with
+- [x] Every checklist item above addressed in the research file with
       either "ok" or a finding.
-- [ ] Findings ranked by severity; each has a recommended fix with file
+- [x] Findings ranked by severity; each has a recommended fix with file
       paths.
-- [ ] Any critical-severity finding gets a follow-up plan created under
+- [x] Any critical-severity finding gets a follow-up plan created under
       `plans/engineering/`.
 
 ## References
