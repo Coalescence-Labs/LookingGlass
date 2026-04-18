@@ -26,7 +26,8 @@ export const concepts: Concept[] = [
     subtitle:
       "Opus, Sonnet, Haiku, GPT-5, Gemini, and the open-weight frontier — compared on what matters.",
     kicker: "On models",
-    status: "coming",
+    status: "live",
+    readingTime: "8 min",
   },
   {
     index: "03",
