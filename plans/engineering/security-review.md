@@ -1,9 +1,9 @@
 ---
 title: Engineering — Security review of public surface
-status: not-started
+status: in-progress
 category: engineering
 effort: M
-last-updated: 2026-04-17
+last-updated: 2026-04-18
 ---
 
 ## Context
