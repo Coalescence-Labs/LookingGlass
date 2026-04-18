@@ -1,6 +1,6 @@
 ---
 title: Engineering — Structured logging for /api/submit
-status: not-started
+status: applied
 category: engineering
 effort: S
 last-updated: 2026-04-17
@@ -62,13 +62,13 @@ Nothing sensitive (idea text, email address) is logged.
 
 ## Acceptance
 
-- [ ] Every log line is valid JSON on one line.
-- [ ] No `idea`, `name`, or `email` value ever appears in logs.
-- [ ] Happy-path submission produces exactly two logs: `submit.received`
+- [x] Every log line is valid JSON on one line.
+- [x] No `idea`, `name`, or `email` value ever appears in logs.
+- [x] Happy-path submission produces exactly two logs: `submit.received`
       and `submit.sent`.
-- [ ] Unit/sanity test with `curl` covers each event path; confirm the
+- [x] Unit/sanity test with `curl` covers each event path; confirm the
       event fires (check Vercel logs or `bun run dev` terminal).
-- [ ] `bun run build` clean.
+- [x] `bun run build` clean.
 
 ## References
 
@@ -76,3 +76,7 @@ Nothing sensitive (idea text, email address) is logged.
   https://vercel.com/docs/observability/runtime-logs
 - Structured logging best practices — any recent "JSON logs" guide.
 - Internal: `src/app/api/submit/route.ts`.
+
+## Applied
+
+- 2026-04-18 · `src/lib/log.ts`, `src/app/api/submit/route.ts`, `src/lib/log.test.ts`, `scripts/verify-submit-logs.sh`, `research/security-review.md` (IP logging open question), `package.json` `test` script.
