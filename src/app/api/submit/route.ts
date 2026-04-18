@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { escapeHtml, stripHeaderControls } from "@/lib/emailSafety";
 import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
@@ -47,15 +48,6 @@ function rateLimited(ip: string): boolean {
 function asString(v: unknown, max: number): string {
   if (typeof v !== "string") return "";
   return v.slice(0, max).trim();
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 export async function POST(req: Request) {
@@ -135,10 +127,12 @@ export async function POST(req: Request) {
   const from = process.env.SUBMIT_FROM_EMAIL ?? "onboarding@resend.dev";
   const to = process.env.SUBMIT_TO_EMAIL ?? "coalescencelabs@gmail.com";
 
-  const subjectKind = kind ? ` · ${kind}` : "";
+  const kindForSubject = kind ? stripHeaderControls(kind) : "";
+  const subjectKind = kindForSubject ? ` · ${kindForSubject}` : "";
   const subject = `Looking Glass · new idea${subjectKind}`;
 
-  const replyTo = email || undefined;
+  const replyToRaw = email ? stripHeaderControls(email) : "";
+  const replyTo = replyToRaw.length > 0 ? replyToRaw : undefined;
 
   const metaLines = [
     name && `Name: ${name}`,
