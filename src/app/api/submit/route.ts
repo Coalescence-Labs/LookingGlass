@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 
@@ -12,6 +14,8 @@ const FIELD_MAX = 200;
 // starts, and scale means multiple instances) but enough to slow down naive
 // scripted abuse without adding a Redis dependency for a low-volume site.
 const hits = new Map<string, number[]>();
+
+let loggedMisconfigured = false;
 
 type Payload = {
   idea?: unknown;
@@ -55,20 +59,29 @@ function escapeHtml(s: string): string {
 }
 
 export async function POST(req: Request) {
+  const requestId = randomUUID();
+  const ip = getIp(req);
+
   let payload: Payload;
   try {
     payload = (await req.json()) as Payload;
   } catch {
+    log(
+      "submit.validation_failed",
+      { requestId, ip, reason: "invalid_json" },
+      "warn",
+    );
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
   // Honeypot — if filled, pretend success so bots don't retry or adapt.
   if (typeof payload.website === "string" && payload.website.length > 0) {
+    log("submit.honeypot", { requestId, ip }, "warn");
     return NextResponse.json({ ok: true });
   }
 
-  const ip = getIp(req);
   if (rateLimited(ip)) {
+    log("submit.rate_limited", { requestId, ip }, "warn");
     return NextResponse.json(
       { error: "Too many submissions — please try again later." },
       { status: 429 },
@@ -77,6 +90,11 @@ export async function POST(req: Request) {
 
   const idea = asString(payload.idea, IDEA_MAX);
   if (!idea) {
+    log(
+      "submit.validation_failed",
+      { requestId, ip, reason: "idea_required" },
+      "warn",
+    );
     return NextResponse.json(
       { error: "Idea is required." },
       { status: 400 },
@@ -89,12 +107,28 @@ export async function POST(req: Request) {
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.error("[submit] RESEND_API_KEY is not set");
+    if (!loggedMisconfigured) {
+      loggedMisconfigured = true;
+      log("submit.misconfigured", { requestId, ip }, "error");
+    }
     return NextResponse.json(
       { error: "Mail service isn't configured yet." },
       { status: 500 },
     );
   }
+
+  log(
+    "submit.received",
+    {
+      requestId,
+      ip,
+      ideaLength: idea.length,
+      hasEmail: Boolean(email),
+      hasName: Boolean(name),
+      kind,
+    },
+    "info",
+  );
 
   const resend = new Resend(apiKey);
 
@@ -132,7 +166,7 @@ export async function POST(req: Request) {
 </div>`.trim();
 
   try {
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: `Looking Glass <${from}>`,
       to,
       subject,
@@ -142,16 +176,32 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      console.error("[submit] Resend error:", error);
+      const resendMessage =
+        typeof error.message === "string" ? error.message : "resend_error";
+      log(
+        "submit.resend_error",
+        { requestId, ip, resendMessage },
+        "error",
+      );
       return NextResponse.json(
         { error: "Couldn't send the message." },
         { status: 502 },
       );
     }
 
+    const resendId =
+      data && typeof data === "object" && "id" in data && typeof data.id === "string"
+        ? data.id
+        : "unknown";
+    log("submit.sent", { requestId, ip, resendId }, "info");
+
     return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error("[submit] unexpected error:", err);
+  } catch {
+    log(
+      "submit.resend_error",
+      { requestId, ip, resendMessage: "exception" },
+      "error",
+    );
     return NextResponse.json(
       { error: "Something went wrong on our end." },
       { status: 500 },
