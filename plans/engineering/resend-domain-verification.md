@@ -1,9 +1,9 @@
 ---
 title: Engineering — Verified sender domain for Resend
-status: not-started
+status: in-progress
 category: engineering
 effort: S
-last-updated: 2026-04-17
+last-updated: 2026-04-18
 ---
 
 ## Context
