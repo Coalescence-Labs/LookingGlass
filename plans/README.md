@@ -74,6 +74,7 @@ split it into siblings.
 - [`concepts/mesh-networks.md`](concepts/mesh-networks.md) — mesh routing today + speculative post-stack rebuild.
 - [`concepts/rendering-levels.md`](concepts/rendering-levels.md) — raytracing from pinhole to Blender, taught in unlockable levels.
 - [`concepts/engagement-signals.md`](concepts/engagement-signals.md) — how a social feed measures, pipelines, and ranks its user.
+- [`concepts/git-internals.md`](concepts/git-internals.md) — git as a content-addressable filesystem, taught in unlockable levels.
 
 ### Research
 - [`research/model-roster-refresh.md`](research/model-roster-refresh.md) — keep Concept 02 current.
