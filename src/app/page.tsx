@@ -104,7 +104,7 @@ export default function Home() {
           <Reveal>
             <div className="mt-8 border-t border-line pt-8">
               <p className="type-mono-sm text-bone-3">
-                Series II arrives when it&rsquo;s ready. The archive is the
+                More series arrive when they&rsquo;re ready. The archive is the
                 roadmap.
               </p>
             </div>
