@@ -354,10 +354,10 @@ export const SOURCES: Source[] = [
   },
   {
     id: "inei",
-    cite: "Istituto Espresso Italiano — The Certified Italian Espresso",
-    href: "https://inei.coffee/en/The-Certified-Italian-Espresso.html",
+    cite: "Istituto Espresso Italiano — Espresso Italiano Certificato",
+    href: "https://iei.coffee/espresso-italiano-certificato/",
     tier: "primary",
-    note: "The certified Italian parameters: 7 g, 88 °C at the group, 9 bar, 25 s, 25 mL.",
+    note: "The body that certifies Italian espresso; its specification sets 7 g, 88 °C at the group, 9 bar, 25 s, and ~25 mL in the cup.",
   },
   {
     id: "illy-navarini-2011",
