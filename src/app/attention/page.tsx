@@ -197,7 +197,7 @@ export default function AttentionPage() {
             >
               Each head attends on its own narrow slice, the slices are
               concatenated back together, and a final projection blends them
-              into one result. Eight quiet specialists, then a vote.
+              into one result. Eight quiet specialists, then a single answer.
             </HeadNote>
             <HeadNote
               anchor="Where vs. what"
