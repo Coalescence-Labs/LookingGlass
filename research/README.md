@@ -1,8 +1,35 @@
 # Research
 
-Structured findings produced by research plans in `plans/research/`.
+Structured findings that outlive the conversation that produced them.
+Two layouts, depending on what commissioned the work.
 
-One markdown file per topic. Filename is kebab-case of the topic and
+## Concept articles — `research/<slug>/`
+
+**Run the [`article-research`](../.cursor/skills/article-research/SKILL.md)
+skill first** when starting a concept from `plans/concepts/`. Output is a
+**folder** (not a single file):
+
+```
+research/<slug>/
+  README.md              # index — source map, claim ledger, outline
+  01-<topic-chunk>.md    # one file per research chunk
+  02-<topic-chunk>.md
+  numbers-and-units.md   # optional
+  misconceptions.md      # optional
+  visuals-and-data.md    # optional
+```
+
+The slug matches the plan filename and future route (e.g.
+`solar-life-cycle` → `research/solar-life-cycle/`).
+
+Each chunk file and the index follow the templates in
+`.cursor/skills/article-research/`. Cite chunks in implementation as
+*`research/<slug>/03-main-sequence.md`, claim C-04*.
+
+## Standalone research briefs — `research/<file>.md`
+
+Findings from `plans/research/` use a **single markdown file** at the
+top level of this folder. Filename is kebab-case of the topic and
 matches the plan that commissioned the work where applicable.
 
 ## File format
