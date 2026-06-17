@@ -82,6 +82,10 @@ Write a short **handoff block** (in chat or a scratch file in the worktree the r
 - How you satisfied each **Acceptance** bullet (checkbox list).
 - Known risks or intentional exclusions.
 
+**Concept plans (`plans/concepts/`):** run [`article-humanize`](../article-humanize/SKILL.md)
+on the draft before review so the reviewer reads final voice. Note the
+`humanize/<slug>/` pass log in the handoff.
+
 Stop Session A here. Do not self-approve merge.
 
 ## Session B — Reviewer agent (dedicated)
