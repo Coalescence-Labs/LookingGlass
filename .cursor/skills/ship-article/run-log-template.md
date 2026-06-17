@@ -24,18 +24,18 @@ review-verdict: approve | approve-with-nits | request-changes
 
 ## Phase log
 
-| Phase | Skill / action | Status | Commit | Notes |
-|-------|----------------|--------|--------|-------|
-| 0 | Resolve topic | ✅ | | slug from COA-42 |
-| 1 | Linear + git setup | ✅ | abc1234 | In Progress |
-| 2 | article-research | ✅ | def5678 | 6 chunks |
-| 3 | article-design | ✅ | | |
-| 4 | Implement | ✅ | | lint/build/test pass |
-| 5 | article-humanize | ✅ | | |
-| 6 | article-review | ✅ | | Approve with nits |
-| 7 | PR opened | ✅ | | #NNN |
-| 8 | Linear updated | ✅ | | In Review + comment |
-| 9 | Handoff | ✅ | | |
+| Phase | Skill / action | Status | Commit | Pushed | Notes |
+|-------|----------------|--------|--------|--------|-------|
+| 0 | Resolve topic | ✅ | — | — | slug from COA-42 |
+| 1 | Linear + git setup | ✅ | abc1234 | ✅ | In Progress |
+| 2 | article-research | ✅ | def5678 | ✅ | 6 chunks |
+| 3 | article-design | ✅ | | ✅ | |
+| 4 | Implement | ✅ | | ✅ | lint/build/test pass |
+| 5 | article-humanize | ✅ | | ✅ | |
+| 6 | article-review | ✅ | | ✅ | Approve with nits |
+| 7 | PR opened | ✅ | | ✅ | #NNN |
+| 8 | Linear updated | ✅ | | ✅ | In Review + comment |
+| 9 | Handoff | ✅ | | — | |
 
 ## Linear history
 

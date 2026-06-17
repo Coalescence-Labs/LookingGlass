@@ -3,8 +3,8 @@ name: ship-article
 description: >-
   End-to-end Looking Glass concept article pipeline from a Linear ticket to an
   open PR on develop. Claims the ticket and plan, branches from develop, runs
-  research → design → implement → humanize → review, fixes blockers, pushes,
-  and opens a PR. Maintainer merges manually after reviewing the PR. Use when
+  research → design → implement → humanize → review, fixes blockers, and opens
+  a PR. Commits and pushes after every phase so progress is saved remotely. Maintainer merges manually after reviewing the PR. Use when
   the user gives a Linear issue, article topic, or asks to ship/build a concept.
 ---
 
@@ -13,6 +13,25 @@ description: >-
 Orchestrates the full concept-article pipeline from **Linear ticket → open PR
 on `develop`**. One article per run. Executes every child skill in order; the
 maintainer reviews the PR manually — **do not merge**.
+
+## Commit and push rule
+
+**Every phase ends with commit + push.** Do not batch commits locally across
+phases — progress must be on the remote branch before starting the next phase.
+
+After each phase:
+
+1. Stage and **commit** with the message template for that phase
+2. **Push** to `origin plan/<slug>` (see [Push helper](#push-helper) below)
+3. Update `ship/<slug>/run-*.md` with commit SHA and confirm remote is current
+4. Only then proceed to the next phase
+
+If the agent session is interrupted, work can resume from the last pushed
+commit on `plan/<slug>`.
+
+**Exception:** Phase 0 (resolve topic) may run before the branch exists. Once
+Phase 1 creates the branch, include the run-log scaffold in the first commit
+and push immediately.
 
 ## Child skills (run in this order)
 
@@ -64,6 +83,38 @@ plan exists, **stop** and ask the maintainer to add one before shipping.
 **Out of scope for this skill:** merging the PR, marking Linear Done, or
 post-merge plan cleanup (maintainer handles after manual review).
 
+## Push helper
+
+Use after **every** phase commit. First push on the branch sets upstream;
+later pushes use plain `git push`.
+
+```bash
+BRANCH="plan/<slug>"   # replace slug
+
+# First push on this branch only:
+git push -u origin "$BRANCH"
+
+# Subsequent pushes:
+git push
+```
+
+If push fails due to network errors, retry up to 4 times with exponential
+backoff (4s, 8s, 16s, 32s). If rejected because `develop` moved ahead, rebase
+then push:
+
+```bash
+git fetch origin develop
+git rebase origin/develop
+git push
+```
+
+Verify the remote has your commit before continuing:
+
+```bash
+git rev-parse HEAD
+git rev-parse "origin/plan/<slug>"   # must match after push
+```
+
 ---
 
 ## Phase 0 — Resolve topic
@@ -94,7 +145,8 @@ Update the issue **before** writing code:
   ```text
   Agent started ship-article pipeline.
   Plan: plans/concepts/<slug>.md
-  Branch: plan/<slug> (will push shortly)
+  Branch: plan/<slug>
+  First commit pushed to origin before Phase 2.
   ```
 
 If Linear MCP is unavailable, **stop** and ask the user to authenticate or
@@ -122,14 +174,15 @@ status: in-progress
 last-updated: YYYY-MM-DD
 ```
 
-Commit:
+Commit and push:
 
 ```bash
 git add plans/concepts/<slug>.md ship/<slug>/run-*.md
 git commit -m "chore(<slug>): claim plan and start ship-article pipeline"
+git push -u origin plan/<slug>
 ```
 
----
+Update run log: Phase 1 ✅, commit SHA, push confirmed.
 
 ## Phase 2 — Research
 
@@ -139,16 +192,15 @@ Follow [`article-research`](../article-research/SKILL.md) **completely**.
 - Produce `research/<slug>/` with index, chunks, source map, claim ledger
 - Index `status: draft` minimum before continuing
 
-Commit:
+Commit and push:
 
 ```bash
-git add research/<slug>/
+git add research/<slug>/ ship/<slug>/run-*.md
 git commit -m "research(<slug>): cross-referenced findings for concept article"
+git push
 ```
 
-Update run log: Phase 2 ✅, commit SHA.
-
----
+Update run log: Phase 2 ✅, commit SHA, push confirmed.
 
 ## Phase 3 — Design
 
@@ -158,16 +210,15 @@ Follow [`article-design`](../article-design/SKILL.md) **completely**.
 - Produce `design/<slug>/` (index, section specs, `components.md`)
 - Read live reference pages (Concepts 01–03)
 
-Commit:
+Commit and push:
 
 ```bash
-git add design/<slug>/
+git add design/<slug>/ ship/<slug>/run-*.md
 git commit -m "design(<slug>): page architecture and interactive specs"
+git push
 ```
 
-Update run log: Phase 3 ✅.
-
----
+Update run log: Phase 3 ✅, commit SHA, push confirmed.
 
 ## Phase 4 — Implement
 
@@ -196,16 +247,18 @@ bun test
 
 All must exit 0. Fix failures before committing.
 
-Commit in logical chunks if large, or one commit:
+Commit and push (one commit, or several logical commits — **push after each**):
 
 ```bash
-git add src/ public/data/  # paths per plan
+git add src/ public/data/ ship/<slug>/run-*.md   # paths per plan
 git commit -m "feat(<slug>): ship concept article page and interactives"
+git push
 ```
 
-Update run log: Phase 4 ✅, acceptance self-check.
+If splitting implementation across commits (e.g. lib + page + components), run
+`git push` after **each** commit so partial progress is never local-only.
 
----
+Update run log: Phase 4 ✅, acceptance self-check, commit SHA(s), push confirmed.
 
 ## Phase 5 — Humanize
 
@@ -215,16 +268,15 @@ Follow [`article-humanize`](../article-humanize/SKILL.md).
 - Log pass in `humanize/<slug>/pass-YYYY-MM-DD.md`
 - Re-run `bun run lint && bun run build`
 
-Commit:
+Commit and push:
 
 ```bash
-git add src/ humanize/<slug>/
+git add src/ humanize/<slug>/ ship/<slug>/run-*.md
 git commit -m "humanize(<slug>): polish prose voice"
+git push
 ```
 
-Update run log: Phase 5 ✅.
-
----
+Update run log: Phase 5 ✅, commit SHA, push confirmed.
 
 ## Phase 6 — Review (automated gate)
 
@@ -242,19 +294,35 @@ the PR manually afterward).
 
 1. Fix every **Critical** item
 2. Re-run review phases that failed
-3. Commit fixes (`fix(<slug>): address review criticals`)
+3. Commit and push each fix round:
+
+   ```bash
+   git add -A
+   git commit -m "fix(<slug>): address review criticals"
+   git push
+   ```
+
 4. Repeat until verdict is **Approve** or **Approve with nits**
 
 **Do not open the PR** while Critical items remain.
 
-Update run log: Phase 6 ✅, verdict, review report path.
-
----
-
-## Phase 7 — Push + open PR
+When review passes, commit and push the review report:
 
 ```bash
-git push -u origin plan/<slug>
+git add reviews/<slug>/ ship/<slug>/run-*.md
+git commit -m "review(<slug>): article review report — <verdict>"
+git push
+```
+
+Update run log: Phase 6 ✅, verdict, review report path, commit SHA, push confirmed.
+
+## Phase 7 — Open PR
+
+The branch should **already be on origin** from incremental pushes. Confirm:
+
+```bash
+git status    # clean working tree
+git push      # no-op if already current; catches unpushed commits
 ```
 
 Create PR into **`develop`**:
@@ -321,7 +389,7 @@ Update the Linear issue:
 **Do not** set Linear to Done or plan to `done` — the maintainer does that after
 merge and any PR adjustments.
 
-Commit run log final state and push if not already included:
+Commit run log final state and push:
 
 ```bash
 git add ship/<slug>/
@@ -350,14 +418,15 @@ Copy into the run log and check off:
 - [ ] Linear issue fetched; slug resolved; plan exists
 - [ ] Linear → In Progress + start comment
 - [ ] Branch `plan/<slug>` from `develop`
-- [ ] Plan claimed `in-progress`
-- [ ] `research/<slug>/` complete
-- [ ] `design/<slug>/` complete
-- [ ] Article implemented; plan acceptance met
+- [ ] Plan claimed `in-progress` — **committed + pushed**
+- [ ] `research/<slug>/` complete — **committed + pushed**
+- [ ] `design/<slug>/` complete — **committed + pushed**
+- [ ] Article implemented; plan acceptance met — **committed + pushed**
 - [ ] `bun run lint` / `build` / `test` pass
-- [ ] `humanize/<slug>/` pass complete
-- [ ] `reviews/<slug>/` — Approve or Approve with nits (no open Criticals)
-- [ ] Branch pushed; PR open against `develop`
+- [ ] `humanize/<slug>/` pass complete — **committed + pushed**
+- [ ] `reviews/<slug>/` — Approve or Approve with nits — **committed + pushed**
+- [ ] Remote `origin/plan/<slug>` matches local HEAD before PR
+- [ ] PR open against `develop`
 - [ ] Linear updated with PR link
 - [ ] Run log complete in `ship/<slug>/`
 - [ ] **Maintainer manual review** — out of scope; not merged
@@ -371,7 +440,8 @@ Copy into the run log and check off:
 | Research blocked | Document in research open questions; continue only if non-blocker |
 | Build fails | Fix before next phase; never open PR on red build |
 | Review Critical | Fix loop in Phase 6 |
-| Push rejected | Pull/rebase on `develop`, retry |
+| Push rejected | Rebase on `origin/develop`, retry with backoff (see Push helper) |
+| Unpushed commits before next phase | **Stop** — push first; never start phase N+1 with local-only phase N |
 
 ## Additional resources
 
