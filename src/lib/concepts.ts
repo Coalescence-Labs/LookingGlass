@@ -24,6 +24,13 @@ export const SERIES: Series[] = [
     blurb:
       "How modern AI systems read, remember, and differ — the first concepts in the archive.",
   },
+  {
+    id: "everyday-machines",
+    roman: "III",
+    title: "Everyday machines",
+    blurb:
+      "The systems we live inside — infrastructure and apparatus, taken apart and held to the light.",
+  },
 ];
 
 export const concepts: Concept[] = [
@@ -59,6 +66,17 @@ export const concepts: Concept[] = [
     seriesId: "language-models",
     status: "live",
     readingTime: "7 min",
+  },
+  {
+    index: "04",
+    slug: "mesh-networks",
+    title: "How does a mesh network actually work?",
+    subtitle:
+      "A network with no centre, relaying every message hop by hop — how it routes today, and what we'd rebuild from the rubble if the stack fell.",
+    kicker: "On infrastructure",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
   },
 ];
 
