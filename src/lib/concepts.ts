@@ -24,6 +24,13 @@ export const SERIES: Series[] = [
     blurb:
       "How modern AI systems read, remember, and differ — the first concepts in the archive.",
   },
+  {
+    id: "mechanisms",
+    roman: "II",
+    title: "Mechanisms of the world",
+    blurb:
+      "Physical systems we live inside — stars, machines, phenomena at their own scale.",
+  },
 ];
 
 export const concepts: Concept[] = [
@@ -59,6 +66,17 @@ export const concepts: Concept[] = [
     seriesId: "language-models",
     status: "live",
     readingTime: "7 min",
+  },
+  {
+    index: "04",
+    slug: "solar-life-cycle",
+    title: "The life of a star — the one we live by",
+    subtitle:
+      "Nebular collapse, main sequence, red giant, helium flash, white dwarf — the sun, from start to cold ember.",
+    kicker: "On the things we live by",
+    seriesId: "mechanisms",
+    status: "live",
+    readingTime: "9 min",
   },
 ];
 
