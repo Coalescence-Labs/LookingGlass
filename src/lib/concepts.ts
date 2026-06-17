@@ -29,7 +29,7 @@ export const SERIES: Series[] = [
     roman: "III",
     title: "Everyday machines",
     blurb:
-      "The systems we live inside — infrastructure and apparatus, taken apart and held to the light.",
+      "The ordinary objects and systems we live inside — infrastructure, machines, and media, taken apart and held to the light.",
   },
 ];
 
@@ -75,6 +75,10 @@ export const concepts: Concept[] = [
       "A network with no centre, relaying every message hop by hop — how it routes today, and what we'd rebuild from the rubble if the stack fell.",
     kicker: "On infrastructure",
     seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
+  },
+  {
     index: "05",
     slug: "attention",
     title: "How does attention actually work?",
