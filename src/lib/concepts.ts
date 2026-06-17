@@ -100,6 +100,17 @@ export const concepts: Concept[] = [
     status: "live",
     readingTime: "9 min",
   },
+  {
+    index: "07",
+    slug: "adaptive-music",
+    title: "How game music follows you",
+    subtitle:
+      "A game score isn't a recording — it's a system of stems the engine remixes in real time. Drive it yourself.",
+    kicker: "On systems",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
+  },
 ];
 
 export function getConcept(slug: string) {
