@@ -89,10 +89,11 @@ export function Heatmap() {
                 <button
                   type="button"
                   aria-pressed={isSel}
+                  aria-label={`Show where "${from}" attends`}
                   onClick={() => setSelected(i)}
                   onMouseEnter={() => setSelected(i)}
                   onFocus={() => setSelected(i)}
-                  className={`flex items-center justify-end gap-1 pr-2 py-1 text-right font-mono text-[0.7rem] transition-colors ${
+                  className={`flex items-center justify-end gap-1 pr-2 py-1.5 text-right font-mono text-[0.7rem] transition-colors ${
                     isSel ? "text-accent" : "text-bone-3 hover:text-bone"
                   }`}
                 >
