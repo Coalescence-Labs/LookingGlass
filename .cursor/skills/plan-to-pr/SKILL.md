@@ -55,6 +55,11 @@ If using Cursor Cloud Agents (or similar): start the agent on **`develop`**, sam
 
 Follow the plan’s **Context → Goal → Approach → Files → Acceptance → References**. Honor house rules in `plans/README.md` (primary sources, original prose, design system, no dev server unless the user overrides, verify with `bun run build` when applicable).
 
+**Concept plans (`plans/concepts/`):** confirm `research/<slug>/` exists from the
+[`article-research`](../article-research/SKILL.md) skill before writing page
+code. If the folder is missing or index `status` is not at least `draft`, run
+article research first or stop and ask the user.
+
 ### A3. Commit and push
 
 Conventional commits, small logical commits if large. Push the feature branch:

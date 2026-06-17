@@ -45,6 +45,10 @@ split it into siblings.
 
 ## Working with Cursor
 
+- **Concept articles:** run the [`article-research`](../.cursor/skills/article-research/SKILL.md)
+  skill **before** implementation. It produces `research/<slug>/` with
+  cross-referenced chunk files. Then ship the plan via
+  [`plan-to-pr`](../.cursor/skills/plan-to-pr/SKILL.md).
 - Use `@plans/<path>` to attach a plan to a Cursor composer/agent session.
 - Reference specific files with `@` so Cursor pulls them into context
   automatically.
