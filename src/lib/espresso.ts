@@ -257,7 +257,7 @@ export const BOILERS: BoilerClass[] = [
   {
     id: "dual",
     name: "Dual boiler",
-    essence: "Two boilers, no compromise",
+    essence: "Two boilers, kept apart",
     brewTemp: "~93 °C (PID)",
     steamTemp: "~125–135 °C",
     simultaneous: true,
