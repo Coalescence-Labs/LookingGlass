@@ -20,7 +20,7 @@ export default function MeshNetworksPage() {
         index="04"
         kicker="On infrastructure"
         title="How does a mesh network actually work?"
-        lede="Most networks have a middle: a tower, an exchange, a cable landing where everything converges. A mesh has none. Every node is also a relay, and a message finds its way across the web one hop at a time, taking whatever path happens to be alive. This piece comes in two halves — first how that works today, then what we'd build from the pieces if the centralised stack ever fell away."
+        lede="Most networks have a middle: a tower, an exchange, a cable landing where everything converges. A mesh has none. Every node is also a relay, and a message picks its way across the network one hop at a time, taking whatever path happens to be alive. This piece comes in two halves — first how that works today, then what we'd salvage if the centralised stack ever fell away."
       />
 
       {/* ——— Short answer ——— */}
