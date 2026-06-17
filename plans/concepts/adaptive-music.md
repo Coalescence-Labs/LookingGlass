@@ -1,10 +1,10 @@
 ---
 title: Concept — Adaptive music in games
-status: not-started
+status: in-progress
 category: concept
 effort: L
 series: "III — Everyday machines"
-last-updated: 2026-04-17
+last-updated: 2026-06-17
 ---
 
 ## Context
