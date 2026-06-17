@@ -24,6 +24,13 @@ export const SERIES: Series[] = [
     blurb:
       "How modern AI systems read, remember, and differ — the first concepts in the archive.",
   },
+  {
+    id: "everyday-machines",
+    roman: "III",
+    title: "Everyday machines",
+    blurb:
+      "The systems hiding in plain sight — the machines and media we use without seeing how they work.",
+  },
 ];
 
 export const concepts: Concept[] = [
@@ -59,6 +66,17 @@ export const concepts: Concept[] = [
     seriesId: "language-models",
     status: "live",
     readingTime: "7 min",
+  },
+  {
+    index: "05",
+    slug: "adaptive-music",
+    title: "How game music follows you",
+    subtitle:
+      "A game score isn't a recording — it's a system of stems the engine remixes in real time. Drive it yourself.",
+    kicker: "On systems",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
   },
 ];
 
