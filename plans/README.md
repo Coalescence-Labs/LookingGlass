@@ -45,7 +45,17 @@ split it into siblings.
 
 ## Working with Cursor
 
-Concept articles ship in five passes:
+### Ship a concept article (start here)
+
+Use **[`ship-article`](../.cursor/skills/ship-article/SKILL.md)** with a **Linear
+ticket** or topic. It runs the full pipeline (committing and pushing after each
+phase) and opens a PR on `develop` for your manual review:
+
+Linear ticket → research → design → implement → humanize → review → PR
+
+### Individual passes (manual)
+
+Or run each skill separately:
 
 1. **[`article-research`](../.cursor/skills/article-research/SKILL.md)** — gather
    and cross-reference sources → `research/<slug>/`

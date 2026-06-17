@@ -13,6 +13,11 @@ description: >-
 
 Use this skill when turning one item under `plans/` into a merge-ready pull request against **`develop`**. One plan per run. Split **implementer** and **reviewer** across **separate Cursor agent sessions** so review stays independent.
 
+For **concept articles**, prefer **[`ship-article`](../ship-article/SKILL.md)** — it
+orchestrates research, design, implement, humanize, review, and PR from a
+Linear ticket in one pipeline. Use `plan-to-pr` alone for engineering plans or
+when running a single pass manually.
+
 ## Preconditions
 
 - Default base branch for new work is **`develop`** (reconcile with `git remote show origin` if unsure).
