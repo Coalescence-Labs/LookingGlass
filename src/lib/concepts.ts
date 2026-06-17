@@ -24,6 +24,13 @@ export const SERIES: Series[] = [
     blurb:
       "How modern AI systems read, remember, and differ — the first concepts in the archive.",
   },
+  {
+    id: "everyday-machines",
+    roman: "III",
+    title: "Everyday machines",
+    blurb:
+      "The ordinary objects that turn out to be small, exact machines — starting with the one on the kitchen counter.",
+  },
 ];
 
 export const concepts: Concept[] = [
@@ -59,6 +66,17 @@ export const concepts: Concept[] = [
     seriesId: "language-models",
     status: "live",
     readingTime: "7 min",
+  },
+  {
+    index: "04",
+    slug: "espresso-machine",
+    title: "How an espresso machine works",
+    subtitle:
+      "Nine bars of pressure, water a few degrees off boiling, and seven grams of coffee — a contained thermodynamic event that resolves in under half a minute.",
+    kicker: "On machines",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
   },
 ];
 
