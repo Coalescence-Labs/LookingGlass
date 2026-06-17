@@ -81,7 +81,9 @@ Open a **new** agent session. Do **not** continue the implementer thread.
 Attach:
 
 - This skill (optional but good),
-- [`reviewer-brief.md`](reviewer-brief.md),
+- **Concept plans:** [`article-review`](../article-review/SKILL.md) and
+  [`article-review/reviewer-brief.md`](../article-review/reviewer-brief.md)
+- **Other plans:** [`reviewer-brief.md`](reviewer-brief.md)
 - `@plans/<same-file>`,
 - the implementer handoff (paste or `@` file).
 
@@ -89,7 +91,13 @@ Check out **the same branch** the implementer pushed (read-only review is OK via
 
 ### Reviewer output
 
-Produce a structured review: Critical / Suggestions / Questions. Map findings to plan **Acceptance** items. If Critical items exist, **do not** open the PR from this session; list required fixes for the implementer.
+**Concept plans (`plans/concepts/`):** run the full
+[`article-review`](../article-review/SKILL.md) workflow. Write
+`reviews/<slug>/review-YYYY-MM-DD.md`. Verdict **Request changes** blocks merge.
+
+**Other plans:** produce a structured review: Critical / Suggestions / Questions.
+Map findings to plan **Acceptance** items. If Critical items exist, **do not**
+open the PR from this session; list required fixes for the implementer.
 
 If only Suggestions/Questions: implementer may address or respond; re-run a short reviewer pass if behavior changed materially.
 
@@ -134,6 +142,7 @@ You merge what you want from GitHub into **`develop`**. After merge, in a follow
 - Set the plan’s `status: done` and append the closing note with commit/PR per `plans/README.md`.
 - Remove the local worktree when finished.
 - If research shipped, update `research/*.md` frontmatter per `research/README.md`.
+- If a concept article merged, set `reviews/<slug>/` report `status: resolved`.
 
 ## Checklist (copy for the implementer)
 
