@@ -45,6 +45,29 @@ split it into siblings.
 
 ## Working with Cursor
 
+### Ship a concept article (start here)
+
+Use **[`ship-article`](../.cursor/skills/ship-article/SKILL.md)** with a **Linear
+ticket** or topic. It runs the full pipeline (committing and pushing after each
+phase) and opens a PR on `develop` for your manual review:
+
+Linear ticket → research → design → implement → humanize → review → PR
+
+### Individual passes (manual)
+
+Or run each skill separately:
+
+1. **[`article-research`](../.cursor/skills/article-research/SKILL.md)** — gather
+   and cross-reference sources → `research/<slug>/`
+2. **[`article-design`](../.cursor/skills/article-design/SKILL.md)** — architect
+   the page, interactives, and motion → `design/<slug>/`
+3. **[`plan-to-pr`](../.cursor/skills/plan-to-pr/SKILL.md)** — implement to
+   acceptance and open a PR
+4. **[`article-humanize`](../.cursor/skills/article-humanize/SKILL.md)** — polish
+   prose so it reads natural and human → `humanize/<slug>/`
+5. **[`article-review`](../.cursor/skills/article-review/SKILL.md)** — fact-check,
+   link-check, build verification, and a11y audit → `reviews/<slug>/`
+
 - Use `@plans/<path>` to attach a plan to a Cursor composer/agent session.
 - Reference specific files with `@` so Cursor pulls them into context
   automatically.

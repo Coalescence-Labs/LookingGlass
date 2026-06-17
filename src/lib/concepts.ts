@@ -24,6 +24,13 @@ export const SERIES: Series[] = [
     blurb:
       "How modern AI systems read, remember, and differ — the first concepts in the archive.",
   },
+  {
+    id: "everyday-machines",
+    roman: "III",
+    title: "Everyday machines",
+    blurb:
+      "The ordinary objects and systems we live inside — infrastructure, machines, and media, taken apart and held to the light.",
+  },
 ];
 
 export const concepts: Concept[] = [
@@ -59,6 +66,50 @@ export const concepts: Concept[] = [
     seriesId: "language-models",
     status: "live",
     readingTime: "7 min",
+  },
+  {
+    index: "04",
+    slug: "mesh-networks",
+    title: "How does a mesh network actually work?",
+    subtitle:
+      "A network with no centre, relaying every message hop by hop — how it routes today, and what we'd rebuild from the rubble if the stack fell.",
+    kicker: "On infrastructure",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
+  },
+  {
+    index: "05",
+    slug: "attention",
+    title: "How does attention actually work?",
+    subtitle:
+      "Every word in a sentence quietly reads every other one, then keeps what's relevant. That reading step is attention — the engine inside every transformer.",
+    kicker: "On attention",
+    seriesId: "language-models",
+    status: "live",
+    readingTime: "9 min",
+  },
+  {
+    index: "06",
+    slug: "espresso-machine",
+    title: "How an espresso machine works",
+    subtitle:
+      "Nine bars of pressure, water a few degrees off boiling, and seven grams of coffee — a contained thermodynamic event that resolves in under half a minute.",
+    kicker: "On machines",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
+  },
+  {
+    index: "07",
+    slug: "adaptive-music",
+    title: "How game music follows you",
+    subtitle:
+      "A game score isn't a recording — it's a system of stems the engine remixes in real time. Drive it yourself.",
+    kicker: "On systems",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
   },
 ];
 
