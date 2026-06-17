@@ -90,6 +90,17 @@ export const concepts: Concept[] = [
     readingTime: "9 min",
   },
   {
+    index: "06",
+    slug: "espresso-machine",
+    title: "How an espresso machine works",
+    subtitle:
+      "Nine bars of pressure, water a few degrees off boiling, and seven grams of coffee — a contained thermodynamic event that resolves in under half a minute.",
+    kicker: "On machines",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "9 min",
+  },
+  {
     index: "07",
     slug: "adaptive-music",
     title: "How game music follows you",
