@@ -60,6 +60,17 @@ export const concepts: Concept[] = [
     status: "live",
     readingTime: "7 min",
   },
+  {
+    index: "05",
+    slug: "attention",
+    title: "How does attention actually work?",
+    subtitle:
+      "Every word in a sentence quietly reads every other one, then keeps what's relevant. That reading step is attention — the engine inside every transformer.",
+    kicker: "On attention",
+    seriesId: "language-models",
+    status: "live",
+    readingTime: "9 min",
+  },
 ];
 
 export function getConcept(slug: string) {
