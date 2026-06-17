@@ -19,7 +19,7 @@ export default function AdaptiveMusicPage() {
         index="05"
         kicker="On systems"
         title="How game music follows you"
-        lede="Play the same room twice and the music isn't quite the same. That's not a long recording on shuffle — it's a system. A composer writes the music in separable parts, and the game decides which parts you hear, and when, while you play."
+        lede="Play the same room twice and the music isn't quite the same. That's not one long recording on shuffle — it's a system. A composer writes the score in separable parts, and the game decides which of them you hear, and when."
       />
 
       {/* ——— Short answer ——— */}
