@@ -96,6 +96,7 @@ Or run each skill separately:
 - [`concepts/attention-mechanism.md`](concepts/attention-mechanism.md) — Series I continuation.
 - [`concepts/mesh-networks.md`](concepts/mesh-networks.md) — mesh routing today + speculative post-stack rebuild.
 - [`concepts/rendering-levels.md`](concepts/rendering-levels.md) — raytracing from pinhole to Blender, taught in unlockable levels.
+- [`concepts/crt-television.md`](concepts/crt-television.md) — one electron beam, raster scan, phosphor persistence.
 
 ### Research
 - [`research/model-roster-refresh.md`](research/model-roster-refresh.md) — keep Concept 02 current.
