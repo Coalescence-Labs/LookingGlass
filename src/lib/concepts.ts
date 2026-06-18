@@ -36,7 +36,7 @@ export const SERIES: Series[] = [
     roman: "III",
     title: "Everyday machines",
     blurb:
-      "The ordinary objects and systems that turn out to be small, exact machines — taken apart and held to the light.",
+      "The ordinary objects and systems we live inside — infrastructure, machines, and media, taken apart and held to the light.",
   },
 ];
 
