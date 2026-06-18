@@ -96,6 +96,11 @@ Or run each skill separately:
 - [`concepts/attention-mechanism.md`](concepts/attention-mechanism.md) — Series I continuation.
 - [`concepts/mesh-networks.md`](concepts/mesh-networks.md) — mesh routing today + speculative post-stack rebuild.
 - [`concepts/rendering-levels.md`](concepts/rendering-levels.md) — raytracing from pinhole to Blender, taught in unlockable levels.
+- [`concepts/gps.md`](concepts/gps.md) — trilateration, atomic clocks, relativity corrections.
+- [`concepts/diffusion-models.md`](concepts/diffusion-models.md) — forward noising, reverse denoising, step-by-step image generation.
+- [`concepts/public-key-encryption.md`](concepts/public-key-encryption.md) — key pairs, TLS handshake, toy encrypt/decrypt demo.
+- [`concepts/qr-codes.md`](concepts/qr-codes.md) — module grid, Reed–Solomon error correction.
+- [`concepts/noise-cancellation.md`](concepts/noise-cancellation.md) — destructive interference, feedforward/feedback ANC.
 
 ### Research
 - [`research/model-roster-refresh.md`](research/model-roster-refresh.md) — keep Concept 02 current.
