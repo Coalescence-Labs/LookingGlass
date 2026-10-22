@@ -226,11 +226,11 @@ export default function AboutPage() {
               })}
               <div className="border-t border-line pt-4">
                 <div className="flex items-baseline justify-between gap-4">
-                  <span className="type-mono-sm text-dim">Series II</span>
+                  <span className="type-mono-sm text-dim">Series III+</span>
                   <span className="type-mono-sm text-dim">In the kiln</span>
                 </div>
                 <p className="mt-2 type-mono-sm text-bone-3">
-                  Arrives when it&rsquo;s ready.
+                  New rooms open when they&rsquo;re ready.
                 </p>
               </div>
             </div>
