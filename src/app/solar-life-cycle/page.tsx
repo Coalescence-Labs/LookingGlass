@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/motion/Reveal";
 import { SourceOutboundLink } from "@/components/site/SourceOutboundLink";
+import { Term } from "@/components/site/Term";
 import { StageTimeline } from "@/components/solar/StageTimeline";
 import { SolarStages } from "@/components/solar/SolarStages";
-import { SOURCES, SUN_CURRENT_AGE_GYR, TOTAL_GYR } from "@/lib/solar";
+import { SOURCES, STAGES, SUN_CURRENT_AGE_GYR } from "@/lib/solar";
 
 export const metadata: Metadata = {
   title: "The life of a star — the one we live by",
@@ -13,7 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default function SolarLifeCyclePage() {
-  const remainingGyr = TOTAL_GYR - SUN_CURRENT_AGE_GYR;
+  const mainSequence = STAGES.find((s) => s.id === "main-sequence")!;
+  const remainingMsGyr =
+    mainSequence.startGyr + mainSequence.durationGyr - SUN_CURRENT_AGE_GYR;
 
   return (
     <>
@@ -21,7 +24,7 @@ export default function SolarLifeCyclePage() {
         index="04"
         kicker="On the things we live by"
         title="The life of a star — the one we live by"
-        lede="The sun is the largest mechanism any of us will ever live alongside, and one of the few whose inner workings don't require a specialist to describe. It has a childhood, a long working middle, a dramatic old age, and a long, slow afterwards. Here is the whole of it."
+        lede="The sun is the largest celestial body most of us will ever live alongside. It has a childhood, a long working middle, a dramatic old age, and a long, slow afterwards. Here is the whole of it."
       />
 
       {/* ——— Short answer ——— */}
@@ -48,7 +51,7 @@ export default function SolarLifeCyclePage() {
                 <span className="type-mono-sm">Remaining main sequence</span>
                 <div className="mt-4">
                   <span className="type-numeral text-[3.25rem] leading-none text-bone md:text-[4rem]">
-                    ~{remainingGyr.toFixed(1)}
+                    ~{remainingMsGyr.toFixed(1)}
                   </span>
                   <div className="type-mono">billion years</div>
                 </div>
@@ -76,11 +79,11 @@ export default function SolarLifeCyclePage() {
           <Reveal delay={0.15}>
             <div className="flex flex-col gap-6 type-body max-w-xl">
               <p>
-                A star is a ball of plasma held together by its own weight, kept
-                from collapsing by the pressure of fusion happening in its
-                centre. When a new kind of fuel runs out, the balance shifts,
-                and the star reconfigures — sometimes gradually, sometimes in
-                minutes.
+                A star is a ball of <Term>plasma</Term> held together by its
+                own weight, kept from collapsing by the pressure of fusion
+                happening in its centre. When a new kind of fuel runs out, the
+                balance shifts, and the star reconfigures — sometimes over
+                millions of years, sometimes in a flash.
               </p>
               <p>
                 What follows is not the story of every star. Massive stars end
@@ -116,10 +119,11 @@ export default function SolarLifeCyclePage() {
 
         <Reveal delay={0.08}>
           <p className="mt-10 type-lede max-w-2xl">
-            The sun&rsquo;s life spans 11 orders of magnitude in duration, from
-            minute-long events like the helium flash to hundred-billion-year
-            cooling. A log scale makes every phase visible; a linear scale
-            shows what one Gyr really looks like next to the others.
+            The sun&rsquo;s life unfolds on timescales from seconds to a
+            hundred billion years — from the helium flash to the long cooling
+            of the white dwarf it leaves behind. A log scale makes every
+            phase visible; a linear scale shows what one billion years really
+            looks like next to the others.
           </p>
         </Reveal>
 
@@ -250,8 +254,8 @@ export default function SolarLifeCyclePage() {
         <Reveal delay={0.08}>
           <ul className="mt-8 flex flex-col gap-5 type-body max-w-3xl">
             <li>
-              Sun&rsquo;s current age (4.6 Gyr), radius, luminosity, and
-              hydrostatic properties are drawn from the{" "}
+              Sun&rsquo;s current age (4.6 billion years), radius,
+              luminosity, and hydrostatic properties are drawn from the{" "}
               <SourceOutboundLink
                 href={SOURCES.nasa.href}
                 className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
@@ -299,8 +303,9 @@ export default function SolarLifeCyclePage() {
             </li>
             <li>
               Earth habitability framing (§ III) is intentionally
-              order-of-magnitude: specific Myr numbers depend on climate
-              coupling assumptions that remain under active discussion. The
+              order-of-magnitude: specific million-year figures depend on
+              climate coupling assumptions that remain under active
+              discussion. The
               direction and rough scale are robust; pinpoint values are not.
             </li>
             <li>

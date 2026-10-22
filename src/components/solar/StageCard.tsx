@@ -1,5 +1,5 @@
 import type { Stage } from "@/lib/solar";
-import { formatGyr, SOURCES } from "@/lib/solar";
+import { formatDurationPlain, SOURCES, stageDurationYears } from "@/lib/solar";
 
 type Props = {
   stage: Stage;
@@ -38,11 +38,13 @@ export function StageCard({ stage }: Props) {
         <dl className="flex flex-col gap-4">
           <Row label="Starts at">
             {stage.isEvent
-              ? `${formatGyr(stage.startGyr)} (instant)`
-              : formatGyr(stage.startGyr)}
+              ? `${formatDurationPlain(stage.startGyr * 1e9)} (instant)`
+              : formatDurationPlain(stage.startGyr * 1e9)}
           </Row>
           <Row label="Duration">
-            {stage.isEvent ? "Minutes" : formatGyr(stage.durationGyr)}
+            {stage.isEvent
+              ? "Seconds to minutes"
+              : formatDurationPlain(stageDurationYears(stage))}
           </Row>
           <Row label="Core temp">{stage.coreTempMK} MK</Row>
           <Row label="Radius">{stage.radiusRSun} R☉</Row>

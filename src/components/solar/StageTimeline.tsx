@@ -2,11 +2,12 @@
 
 import { useId, useMemo } from "react";
 import {
-  LOG_RANGE,
+  SECONDS_PER_YEAR,
   STAGES,
   SUN_CURRENT_AGE_GYR,
   TOTAL_GYR,
-  formatGyr,
+  formatLogYears,
+  stageDurationYears,
   type Stage,
 } from "@/lib/solar";
 
@@ -14,34 +15,35 @@ type Props = {
   activeStageId?: Stage["id"];
 };
 
-const LOG_MIN = Math.log10(LOG_RANGE.minGyr);
-const LOG_MAX = Math.log10(LOG_RANGE.maxGyr);
+const MIN_YEARS = 60 / SECONDS_PER_YEAR; // a minute, in years — floor for the log map
+const LOG_BASE = Math.log10(MIN_YEARS);
+const LOG_OFFSET = 1; // ensures the shortest event gets a visible slice
 
-function logPos(gyr: number): number {
-  const g = Math.max(LOG_RANGE.minGyr, gyr);
-  return (Math.log10(g) - LOG_MIN) / (LOG_MAX - LOG_MIN);
+function logDurationWeight(years: number): number {
+  return Math.max(LOG_OFFSET, Math.log10(years) - LOG_BASE + LOG_OFFSET);
 }
 
 function linPos(gyr: number): number {
   return Math.min(1, Math.max(0, gyr / TOTAL_GYR));
 }
 
-const LOG_TICKS = [0.001, 0.01, 0.1, 1, 10, 100];
+const NAME_INLINE_THRESHOLD = 0.08;
+const LABEL_BELOW_THRESHOLD = 0.06;
 
 export function StageTimeline({ activeStageId }: Props) {
   const gradientId = useId();
 
-  const logBands = useMemo(
-    () =>
-      STAGES.map((s) => {
-        const startG = Math.max(LOG_RANGE.minGyr, s.startGyr);
-        const endG = Math.max(LOG_RANGE.minGyr, s.startGyr + s.durationGyr);
-        const left = logPos(startG);
-        const right = logPos(endG);
-        return { stage: s, left, width: Math.max(0.004, right - left) };
-      }),
-    [],
-  );
+  const logBands = useMemo(() => {
+    const weights = STAGES.map((s) => logDurationWeight(stageDurationYears(s)));
+    const total = weights.reduce((a, b) => a + b, 0);
+    const widths = weights.map((w) => w / total);
+    return STAGES.map((stage, i) => ({
+      stage,
+      left: widths.slice(0, i).reduce((a, b) => a + b, 0),
+      width: widths[i],
+      durationYears: stageDurationYears(stage),
+    }));
+  }, []);
 
   const linBands = useMemo(
     () =>
@@ -53,96 +55,117 @@ export function StageTimeline({ activeStageId }: Props) {
     [],
   );
 
-  const nowLog = logPos(SUN_CURRENT_AGE_GYR);
+  // "Now" lives inside the main-sequence band. Position linearly by progress.
+  const msBand = logBands.find((b) => b.stage.id === "main-sequence");
+  const msProgress = msBand
+    ? (SUN_CURRENT_AGE_GYR - msBand.stage.startGyr) / msBand.stage.durationGyr
+    : 0;
+  const nowLog = msBand ? msBand.left + msBand.width * msProgress : 0;
   const nowLin = linPos(SUN_CURRENT_AGE_GYR);
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-14">
+      {/* ——— Log-duration strip ——— */}
       <div>
         <div className="flex items-baseline justify-between">
-          <span className="type-mono-sm">Log scale · every tick is ten times the last</span>
+          <span className="type-mono-sm">
+            Log duration · each phase, sized by how long it takes
+          </span>
           <span className="type-mono-sm text-bone-3">
-            {formatGyr(LOG_RANGE.minGyr)} → {formatGyr(LOG_RANGE.maxGyr)}
+            minutes → 10¹¹ yr
           </span>
         </div>
 
-        <div className="relative mt-6 h-20 border-t border-b border-line">
+        <div className="relative mt-12 h-24 border-t border-b border-line">
           {logBands.map(({ stage, left, width }) => {
             const active = activeStageId === stage.id;
+            const showName = width >= NAME_INLINE_THRESHOLD;
+            const fill = stage.isEvent
+              ? active
+                ? "rgba(228,199,138,0.55)"
+                : "rgba(228,199,138,0.32)"
+              : active
+              ? "rgba(228,199,138,0.16)"
+              : "rgba(236,232,222,0.035)";
             return (
               <div
                 key={stage.id}
-                className="absolute inset-y-0 flex items-end transition-[background,opacity] duration-500"
+                className="absolute inset-y-0 overflow-hidden transition-[background] duration-500"
                 style={{
                   left: `${left * 100}%`,
                   width: `${width * 100}%`,
-                  background: stage.isEvent
-                    ? active
-                      ? "rgba(228,199,138,0.35)"
-                      : "rgba(228,199,138,0.18)"
-                    : active
-                    ? "rgba(228,199,138,0.14)"
-                    : "rgba(236,232,222,0.04)",
+                  background: fill,
                   borderLeft: "1px solid var(--color-line-2)",
                 }}
                 aria-hidden
               >
-                <span
-                  className="type-mono-sm ml-1 mb-1 whitespace-nowrap"
-                  style={{
-                    color: active
-                      ? "var(--color-accent)"
-                      : "var(--color-bone-3)",
-                  }}
-                >
-                  {stage.isEvent ? "·" : stage.name.split(" ")[0]}
-                </span>
+                {showName && (
+                  <span
+                    className="type-mono-sm absolute bottom-2 left-2 whitespace-nowrap"
+                    style={{
+                      color: active
+                        ? "var(--color-accent)"
+                        : "var(--color-bone-3)",
+                    }}
+                  >
+                    {stage.name}
+                  </span>
+                )}
               </div>
             );
           })}
 
+          {/* Now marker */}
           <div
-            className="absolute inset-y-0 w-px"
-            style={{
-              left: `${nowLog * 100}%`,
-              background: "var(--color-accent)",
-            }}
+            className="pointer-events-none absolute inset-y-0 w-px"
+            style={{ left: `${nowLog * 100}%`, background: "var(--color-accent)" }}
           >
             <span
-              className="absolute -top-6 -translate-x-1/2 type-mono-sm text-accent"
+              className="type-mono-sm absolute -top-7 -translate-x-1/2 whitespace-nowrap text-accent"
               style={{ left: "0" }}
             >
-              Now · {SUN_CURRENT_AGE_GYR} Gyr
+              Now · 4.6 billion years
             </span>
           </div>
         </div>
 
-        <div className="relative mt-2 h-4">
-          {LOG_TICKS.map((t) => {
-            const left = logPos(t);
-            if (left < 0 || left > 1) return null;
+        {/* Duration row below strip */}
+        <div className="relative mt-3 h-4">
+          {logBands.map(({ stage, left, width, durationYears }) => {
+            if (width < LABEL_BELOW_THRESHOLD) return null;
             return (
-              <div
-                key={t}
-                className="absolute top-0 flex flex-col items-center"
-                style={{ left: `${left * 100}%`, transform: "translateX(-50%)" }}
+              <span
+                key={stage.id}
+                className="type-mono-sm absolute top-0 -translate-x-1/2 whitespace-nowrap text-dim"
+                style={{ left: `${(left + width / 2) * 100}%` }}
               >
-                <span className="type-mono-sm text-dim">{formatGyr(t)}</span>
-              </div>
+                {formatLogYears(durationYears)}
+              </span>
             );
           })}
         </div>
+
+        <p className="mt-6 type-mono-sm text-bone-3 max-w-xl">
+          Each band is one phase, scaled by the log of its duration. From the
+          minute of a helium flash to the hundred billion years of white-dwarf
+          cooling, every phase gets a readable slice. The strip is a duration
+          ladder, not a time axis — the linear strip below is the true-time
+          view.
+        </p>
       </div>
 
+      {/* ——— Linear strip ——— */}
       <div>
         <div className="flex items-baseline justify-between">
-          <span className="type-mono-sm">Linear scale · the same time, unflattened</span>
+          <span className="type-mono-sm">
+            Linear scale · the same time, unflattened
+          </span>
           <span className="type-mono-sm text-bone-3">
-            0 → {Math.round(TOTAL_GYR)} Gyr
+            0 → {Math.round(TOTAL_GYR)} billion years
           </span>
         </div>
 
-        <div className="relative mt-6 h-14 border-t border-b border-line overflow-hidden">
+        <div className="relative mt-12 h-14 overflow-hidden border-t border-b border-line">
           <svg
             width="100%"
             height="100%"
@@ -184,31 +207,26 @@ export function StageTimeline({ activeStageId }: Props) {
           })}
 
           <div
-            className="absolute inset-y-0 w-px"
-            style={{
-              left: `${nowLin * 100}%`,
-              background: "var(--color-accent)",
-            }}
+            className="pointer-events-none absolute inset-y-0 w-px"
+            style={{ left: `${nowLin * 100}%`, background: "var(--color-accent)" }}
           >
             <span
-              className="absolute -top-6 -translate-x-1/2 type-mono-sm text-accent whitespace-nowrap"
+              className="type-mono-sm absolute -top-7 -translate-x-1/2 whitespace-nowrap text-accent"
               style={{ left: "0" }}
             >
               Now
             </span>
-            <span
-              className="absolute top-1/2 -translate-y-1/2 translate-x-2 type-mono-sm text-bone-3 whitespace-nowrap"
-            >
-              ← 4.6 Gyr of main sequence already behind; ~5 Gyr ahead before anything interesting happens.
+            <span className="type-mono-sm absolute top-1/2 -translate-y-1/2 translate-x-2 whitespace-nowrap text-bone-3">
+              ← 4.6 billion years of main sequence already behind; ~5 billion ahead before anything interesting happens.
             </span>
           </div>
         </div>
 
-        <p className="mt-4 type-mono-sm text-bone-3 max-w-xl">
-          The log scale makes every phase readable. The linear strip is the same
-          story at true proportions — four-fifths of the sun&rsquo;s entire
-          working life is the main sequence we&rsquo;re in the middle of. Everything
-          after the red-giant turn fits in a sliver you can barely see.
+        <p className="mt-6 type-mono-sm text-bone-3 max-w-xl">
+          The linear strip restores true proportions. Four-fifths of the
+          sun&rsquo;s working life is the main sequence we&rsquo;re in the
+          middle of; everything after the red-giant turn fits in a sliver you
+          can barely see.
         </p>
       </div>
     </div>

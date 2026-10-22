@@ -114,7 +114,7 @@ export const STAGES: Stage[] = [
     coreState: "Helium ignites in a degenerate core. Temperature spikes; pressure doesn't respond; fusion rate runs away until degeneracy is lifted.",
     surface: "Almost nothing visible. The outburst is absorbed internally — the envelope barely notices.",
     blurb:
-      "A thermonuclear runaway buried at the centre, over in minutes. The core restructures itself; the surface carries on indifferent.",
+      "A thermonuclear runaway buried at the centre, over in anywhere from seconds to minutes. The core restructures itself; the surface carries on indifferent.",
     analogy: "An internal surge that rebuilds the engine before the dashboard reacts.",
     citations: [
       { label: "Christensen-Dalsgaard §12.3", source: "cd" },
@@ -252,6 +252,64 @@ export function formatGyr(gyr: number): string {
   if (gyr >= 0.001) return `${(gyr * 1000).toFixed(0)} Myr`;
   if (gyr >= 1e-6) return `${(gyr * 1e6).toFixed(0)} yr`;
   return "< 1 yr";
+}
+
+export const SECONDS_PER_YEAR = 3.155693e7;
+
+export function stageDurationYears(stage: Stage): number {
+  if (stage.isEvent) return 60; // helium-flash representative: ~1 minute
+  return stage.durationGyr * 1e9;
+}
+
+export function formatDuration(years: number): string {
+  if (years >= 1e9) return `${(years / 1e9).toFixed(years >= 10e9 ? 0 : 1)} Gyr`;
+  if (years >= 1e6) return `${(years / 1e6).toFixed(0)} Myr`;
+  if (years >= 1e3) return `${(years / 1e3).toFixed(0)} kyr`;
+  if (years >= 1) return `${Math.round(years)} yr`;
+  return `~${Math.round(years * SECONDS_PER_YEAR)} s`;
+}
+
+const SUPERSCRIPTS: Record<string, string> = {
+  "-": "⁻",
+  "0": "⁰",
+  "1": "¹",
+  "2": "²",
+  "3": "³",
+  "4": "⁴",
+  "5": "⁵",
+  "6": "⁶",
+  "7": "⁷",
+  "8": "⁸",
+  "9": "⁹",
+};
+
+export function toSuperscript(n: number): string {
+  return String(n)
+    .split("")
+    .map((c) => SUPERSCRIPTS[c] ?? c)
+    .join("");
+}
+
+export function formatLogYears(years: number): string {
+  const exp = Math.round(Math.log10(years));
+  return `10${toSuperscript(exp)} yr`;
+}
+
+export function formatDurationPlain(years: number): string {
+  if (years >= 1e9) {
+    const v = years / 1e9;
+    return `${v >= 10 ? Math.round(v) : v.toFixed(1)} billion years`;
+  }
+  if (years >= 1e6) {
+    return `${Math.round(years / 1e6)} million years`;
+  }
+  if (years >= 1e3) {
+    return `${Math.round(years / 1e3)},000 years`;
+  }
+  if (years >= 1) {
+    return `${Math.round(years)} years`;
+  }
+  return `~${Math.round(years * SECONDS_PER_YEAR)} seconds`;
 }
 
 export type HRPoint = { tempK: number; lumLSun: number; stageId: StageId; label?: string };
