@@ -21,7 +21,7 @@ export default function SolarLifeCyclePage() {
   return (
     <>
       <PageHeader
-        index="04"
+        index="08"
         kicker="On the things we live by"
         title="The life of a star — the one we live by"
         lede="The sun is the largest celestial body most of us will ever live alongside. It has a childhood, a long working middle, a dramatic old age, and a long, slow afterwards. Here is the whole of it."

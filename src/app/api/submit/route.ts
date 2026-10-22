@@ -3,13 +3,9 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { escapeHtml, stripHeaderControls } from "@/lib/emailSafety";
 import { log } from "@/lib/log";
+import { asString, FIELD_MAX, getIp, IDEA_MAX, rateLimited } from "@/lib/submit";
 
 export const runtime = "nodejs";
-
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
-const IDEA_MAX = 4000;
-const FIELD_MAX = 200;
 
 // Per-serverless-instance rate limit. Not perfect (serverless resets on cold
 // starts, and scale means multiple instances) but enough to slow down naive
@@ -25,30 +21,6 @@ type Payload = {
   kind?: unknown;
   website?: unknown;
 };
-
-function getIp(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
-  return req.headers.get("x-real-ip") ?? "unknown";
-}
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW_MS;
-  const previous = hits.get(ip)?.filter((t) => t > windowStart) ?? [];
-  if (previous.length >= RATE_LIMIT_MAX) {
-    hits.set(ip, previous);
-    return true;
-  }
-  previous.push(now);
-  hits.set(ip, previous);
-  return false;
-}
-
-function asString(v: unknown, max: number): string {
-  if (typeof v !== "string") return "";
-  return v.slice(0, max).trim();
-}
 
 export async function POST(req: Request) {
   const requestId = randomUUID();
@@ -72,7 +44,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (rateLimited(ip)) {
+  if (rateLimited(ip, hits)) {
     log("submit.rate_limited", { requestId, ip }, "warn");
     return NextResponse.json(
       { error: "Too many submissions — please try again later." },

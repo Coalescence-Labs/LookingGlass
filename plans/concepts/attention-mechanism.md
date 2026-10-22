@@ -1,10 +1,10 @@
 ---
 title: Concept — How attention actually works
-status: not-started
+status: in-progress
 category: concept
 effort: M
 series: "I — On language models"
-last-updated: 2026-04-17
+last-updated: 2026-06-17
 ---
 
 ## Context
