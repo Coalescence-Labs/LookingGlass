@@ -9,7 +9,7 @@ export function StageCard({ stage }: Props) {
   return (
     <article
       id={`stage-${stage.id}`}
-      className="flex flex-col gap-6 border-t border-line pt-8 md:pt-12"
+      className="flex flex-col gap-6 border-t border-line py-10 md:py-14"
     >
       <header className="flex flex-col gap-2 md:flex-row md:items-baseline md:justify-between md:gap-8">
         <div className="flex items-baseline gap-4">
@@ -21,7 +21,7 @@ export function StageCard({ stage }: Props) {
         <span className="type-mono-sm text-bone-3">{stage.subtitle}</span>
       </header>
 
-      <div className="grid gap-10 md:grid-cols-[1.3fr_1fr] md:gap-16">
+      <div className="grid gap-8 md:grid-cols-[1.3fr_1fr] md:gap-12">
         <div className="flex flex-col gap-5 type-body max-w-xl">
           <p className="type-lede">{stage.blurb}</p>
           <p>
@@ -35,7 +35,7 @@ export function StageCard({ stage }: Props) {
           <p className="type-mono-sm text-bone-3">{stage.analogy}</p>
         </div>
 
-        <dl className="flex flex-col gap-4">
+        <dl className="flex flex-col gap-3">
           <Row label="Starts at">
             {stage.isEvent
               ? `${formatDurationPlain(stage.startGyr * 1e9)} (instant)`

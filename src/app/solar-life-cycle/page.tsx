@@ -46,11 +46,11 @@ export default function SolarLifeCyclePage() {
                 then a hundred-billion-year cooling.
               </p>
             </div>
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-6">
               <div>
                 <span className="type-mono-sm">Remaining main sequence</span>
-                <div className="mt-4">
-                  <span className="type-numeral text-[3.25rem] leading-none text-bone md:text-[4rem]">
+                <div className="mt-3">
+                  <span className="type-numeral text-[3.5rem] leading-none text-bone md:text-[4.5rem]">
                     ~{remainingMsGyr.toFixed(1)}
                   </span>
                   <div className="type-mono">billion years</div>
@@ -118,7 +118,7 @@ export default function SolarLifeCyclePage() {
         </Reveal>
 
         <Reveal delay={0.08}>
-          <p className="mt-10 type-lede max-w-2xl">
+          <p className="mt-8 type-lede max-w-2xl">
             The sun&rsquo;s life unfolds on timescales from seconds to a
             hundred billion years — from the helium flash to the long cooling
             of the white dwarf it leaves behind. A log scale makes every
@@ -127,7 +127,7 @@ export default function SolarLifeCyclePage() {
           </p>
         </Reveal>
 
-        <div className="mt-12 md:mt-16">
+        <div className="mt-10">
           <StageTimeline />
         </div>
       </section>
@@ -145,7 +145,7 @@ export default function SolarLifeCyclePage() {
         </Reveal>
 
         <Reveal delay={0.08}>
-          <p className="mt-10 type-lede max-w-2xl">
+          <p className="mt-8 type-lede max-w-2xl">
             Each phase is defined by what&rsquo;s fusing in the core (or
             isn&rsquo;t). The Hertzsprung–Russell diagram on the left tracks
             the star through luminosity and surface temperature — the two
@@ -153,7 +153,7 @@ export default function SolarLifeCyclePage() {
           </p>
         </Reveal>
 
-        <div className="mt-12 md:mt-16">
+        <div className="mt-10">
           <SolarStages />
         </div>
       </section>
@@ -202,12 +202,9 @@ export default function SolarLifeCyclePage() {
               </p>
             </div>
 
-            <aside
-              className="flex flex-col gap-4 border border-line p-6 md:p-8"
-              style={{ background: "rgba(15, 15, 18, 0.6)" }}
-            >
+            <aside className="flex flex-col gap-5 border-t border-line pt-6 md:pt-0 md:border-t-0 md:border-l md:pl-8">
               <span className="type-mono-sm">The misconceptions this corrects</span>
-              <ul className="flex flex-col gap-3 type-body text-[0.95rem]">
+              <ul className="flex flex-col gap-4 type-body">
                 <li className="flex gap-3">
                   <span className="type-mono-sm mt-1 text-accent">01</span>
                   <span>

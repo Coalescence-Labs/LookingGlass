@@ -8,11 +8,11 @@ type Props = {
 };
 
 const WIDTH = 640;
-const HEIGHT = 420;
-const PAD_L = 52;
-const PAD_R = 24;
-const PAD_T = 24;
-const PAD_B = 40;
+const HEIGHT = 440;
+const PAD_L = 56;
+const PAD_R = 28;
+const PAD_T = 28;
+const PAD_B = 48;
 
 const logT = (k: number) => Math.log10(k);
 const logL = (l: number) => Math.log10(l);
@@ -33,6 +33,27 @@ function yFor(lumLSun: number) {
 
 const T_TICKS = [3000, 5000, 10000, 30000, 100000];
 const L_TICKS = [0.0001, 0.01, 1, 100, 3000];
+
+type LabelAnchor = {
+  dx: number;
+  dy: number;
+  anchor: "start" | "middle" | "end";
+};
+
+/** Per-label offsets so nearby track points don't stack text. */
+const LABEL_LAYOUT: Record<string, LabelAnchor> = {
+  Hayashi: { dx: -8, dy: -8, anchor: "end" },
+  ZAMS: { dx: -8, dy: 14, anchor: "end" },
+  Now: { dx: 10, dy: -8, anchor: "start" },
+  "Late MS": { dx: 10, dy: 14, anchor: "start" },
+  "RGB base": { dx: 8, dy: -8, anchor: "start" },
+  "RGB tip": { dx: -8, dy: -8, anchor: "end" },
+  "Red clump": { dx: 8, dy: 4, anchor: "start" },
+  "AGB tip": { dx: -8, dy: 14, anchor: "end" },
+  "PN central star": { dx: -8, dy: -8, anchor: "end" },
+  WD: { dx: 8, dy: -8, anchor: "start" },
+  "Cold WD": { dx: 8, dy: -8, anchor: "start" },
+};
 
 function formatL(l: number) {
   if (l >= 100) return `${l}`;
@@ -78,7 +99,7 @@ export function HRPath({ activeStageId }: Props) {
   }, []);
 
   return (
-    <figure className="flex flex-col gap-4">
+    <figure className="flex flex-col gap-5">
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         width="100%"
@@ -92,7 +113,7 @@ export function HRPath({ activeStageId }: Props) {
           y={PAD_T}
           width={WIDTH - PAD_L - PAD_R}
           height={HEIGHT - PAD_T - PAD_B}
-          fill="rgba(15,15,18,0.5)"
+          fill="color-mix(in srgb, var(--color-ink-2) 80%, transparent)"
           stroke="var(--color-line)"
         />
 
@@ -137,7 +158,7 @@ export function HRPath({ activeStageId }: Props) {
               />
               <text
                 x={x}
-                y={HEIGHT - PAD_B + 14}
+                y={HEIGHT - PAD_B + 16}
                 textAnchor="middle"
                 fontSize="10"
                 fontFamily="var(--font-mono)"
@@ -151,20 +172,20 @@ export function HRPath({ activeStageId }: Props) {
         })}
 
         <text
-          x={PAD_L - 40}
+          x={PAD_L - 42}
           y={(PAD_T + HEIGHT - PAD_B) / 2}
           textAnchor="middle"
           fontSize="10"
           fontFamily="var(--font-mono)"
           fill="var(--color-bone-3)"
           letterSpacing="0.18em"
-          transform={`rotate(-90 ${PAD_L - 40} ${(PAD_T + HEIGHT - PAD_B) / 2})`}
+          transform={`rotate(-90 ${PAD_L - 42} ${(PAD_T + HEIGHT - PAD_B) / 2})`}
         >
           L / L☉
         </text>
         <text
           x={(PAD_L + WIDTH - PAD_R) / 2}
-          y={HEIGHT - 6}
+          y={HEIGHT - 8}
           textAnchor="middle"
           fontSize="10"
           fontFamily="var(--font-mono)"
@@ -184,26 +205,35 @@ export function HRPath({ activeStageId }: Props) {
           opacity="0.55"
         />
 
-        {HR_PATH.filter((p) => p.label).map((p) => (
-          <g key={`${p.stageId}-${p.label}`}>
-            <circle
-              cx={xFor(p.tempK)}
-              cy={yFor(p.lumLSun)}
-              r="2.5"
-              fill="var(--color-bone-3)"
-            />
-            <text
-              x={xFor(p.tempK) + 6}
-              y={yFor(p.lumLSun) - 6}
-              fontSize="10"
-              fontFamily="var(--font-mono)"
-              fill="var(--color-bone-3)"
-              letterSpacing="0.14em"
-            >
-              {p.label}
-            </text>
-          </g>
-        ))}
+        {HR_PATH.filter((p) => p.label).map((p) => {
+          const layout = LABEL_LAYOUT[p.label!] ?? {
+            dx: 6,
+            dy: -6,
+            anchor: "start" as const,
+          };
+          const isNow = p.label === "Now";
+          return (
+            <g key={`${p.stageId}-${p.label}`}>
+              <circle
+                cx={xFor(p.tempK)}
+                cy={yFor(p.lumLSun)}
+                r="2.5"
+                fill={isNow ? "var(--color-accent)" : "var(--color-bone-3)"}
+              />
+              <text
+                x={xFor(p.tempK) + layout.dx}
+                y={yFor(p.lumLSun) + layout.dy}
+                textAnchor={layout.anchor}
+                fontSize="10"
+                fontFamily="var(--font-mono)"
+                fill={isNow ? "var(--color-accent)" : "var(--color-bone-3)"}
+                letterSpacing="0.14em"
+              >
+                {p.label}
+              </text>
+            </g>
+          );
+        })}
 
         {nowPoint && (
           <circle
@@ -218,16 +248,12 @@ export function HRPath({ activeStageId }: Props) {
         )}
 
         {activePoint && (
-          <g
-            style={{
-              transition: "transform 600ms var(--ease-expo)",
-            }}
-          >
+          <g>
             <circle
               cx={activePoint.x}
               cy={activePoint.y}
               r="14"
-              fill="rgba(228,199,138,0.1)"
+              fill="color-mix(in srgb, var(--color-accent) 10%, transparent)"
               stroke="var(--color-accent)"
               strokeWidth="1"
             />

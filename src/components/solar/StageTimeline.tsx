@@ -28,7 +28,6 @@ function linPos(gyr: number): number {
 }
 
 const NAME_INLINE_THRESHOLD = 0.08;
-const LABEL_BELOW_THRESHOLD = 0.06;
 
 export function StageTimeline({ activeStageId }: Props) {
   const gradientId = useId();
@@ -55,6 +54,16 @@ export function StageTimeline({ activeStageId }: Props) {
     [],
   );
 
+  // Two-row stagger so adjacent duration labels don't collide.
+  const durationLabels = useMemo(
+    () =>
+      logBands.map((band, i) => ({
+        ...band,
+        row: (i % 2) as 0 | 1,
+      })),
+    [logBands],
+  );
+
   // "Now" lives inside the main-sequence band. Position linearly by progress.
   const msBand = logBands.find((b) => b.stage.id === "main-sequence");
   const msProgress = msBand
@@ -64,88 +73,93 @@ export function StageTimeline({ activeStageId }: Props) {
   const nowLin = linPos(SUN_CURRENT_AGE_GYR);
 
   return (
-    <div className="flex flex-col gap-14">
+    <div className="flex flex-col gap-16 md:gap-20">
       {/* ——— Log-duration strip ——— */}
-      <div>
-        <div className="flex items-baseline justify-between">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
           <span className="type-mono-sm">
             Log duration · each phase, sized by how long it takes
           </span>
-          <span className="type-mono-sm text-bone-3">
-            minutes → 10¹¹ yr
-          </span>
+          <span className="type-mono-sm text-bone-3">minutes → 10¹¹ yr</span>
         </div>
 
-        <div className="relative mt-12 h-24 border-t border-b border-line">
-          {logBands.map(({ stage, left, width }) => {
-            const active = activeStageId === stage.id;
-            const showName = width >= NAME_INLINE_THRESHOLD;
-            const fill = stage.isEvent
-              ? active
-                ? "rgba(228,199,138,0.55)"
-                : "rgba(228,199,138,0.32)"
-              : active
-              ? "rgba(228,199,138,0.16)"
-              : "rgba(236,232,222,0.035)";
-            return (
-              <div
-                key={stage.id}
-                className="absolute inset-y-0 overflow-hidden transition-[background] duration-500"
-                style={{
-                  left: `${left * 100}%`,
-                  width: `${width * 100}%`,
-                  background: fill,
-                  borderLeft: "1px solid var(--color-line-2)",
-                }}
-                aria-hidden
-              >
-                {showName && (
-                  <span
-                    className="type-mono-sm absolute bottom-2 left-2 whitespace-nowrap"
-                    style={{
-                      color: active
-                        ? "var(--color-accent)"
-                        : "var(--color-bone-3)",
-                    }}
-                  >
-                    {stage.name}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Now marker */}
+        {/* Marker lane reserved above the strip so "Now" never collides with the title. */}
+        <div className="relative pt-8">
           <div
-            className="pointer-events-none absolute inset-y-0 w-px"
-            style={{ left: `${nowLog * 100}%`, background: "var(--color-accent)" }}
+            className="pointer-events-none absolute top-0 z-10"
+            style={{ left: `${nowLog * 100}%` }}
           >
-            <span
-              className="type-mono-sm absolute -top-7 -translate-x-1/2 whitespace-nowrap text-accent"
-              style={{ left: "0" }}
-            >
-              Now · 4.6 billion years
+            <span className="type-mono-sm absolute bottom-2 left-0 -translate-x-1/2 whitespace-nowrap text-accent">
+              Now · 4.6 Gyr
             </span>
+          </div>
+
+          <div className="relative h-24 border-t border-b border-line">
+            {logBands.map(({ stage, left, width }) => {
+              const active = activeStageId === stage.id;
+              const showName = width >= NAME_INLINE_THRESHOLD;
+              const fill = stage.isEvent
+                ? active
+                  ? "color-mix(in srgb, var(--color-accent) 55%, transparent)"
+                  : "color-mix(in srgb, var(--color-accent) 32%, transparent)"
+                : active
+                  ? "color-mix(in srgb, var(--color-accent) 16%, transparent)"
+                  : "var(--color-glass)";
+              return (
+                <div
+                  key={stage.id}
+                  className="absolute inset-y-0 overflow-hidden transition-[background] duration-500"
+                  style={{
+                    left: `${left * 100}%`,
+                    width: `${width * 100}%`,
+                    background: fill,
+                    borderLeft: "1px solid var(--color-line-2)",
+                  }}
+                  aria-hidden
+                >
+                  {showName && (
+                    <span
+                      className="type-mono-sm absolute bottom-2 left-2 max-w-[calc(100%-0.75rem)] truncate"
+                      style={{
+                        color: active
+                          ? "var(--color-accent)"
+                          : "var(--color-bone-3)",
+                      }}
+                    >
+                      {stage.name}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+
+            <div
+              className="pointer-events-none absolute inset-y-0 w-px"
+              style={{
+                left: `${nowLog * 100}%`,
+                background: "var(--color-accent)",
+              }}
+            />
           </div>
         </div>
 
-        {/* Duration row below strip */}
-        <div className="relative mt-3 h-4">
-          {logBands.map(({ stage, left, width, durationYears }) => {
-            if (width < LABEL_BELOW_THRESHOLD) return null;
-            return (
-              <span
-                key={stage.id}
-                className="type-mono-sm absolute top-0 -translate-x-1/2 whitespace-nowrap text-dim"
-                style={{ left: `${(left + width / 2) * 100}%` }}
-              >
-                {formatLogYears(durationYears)}
-              </span>
-            );
-          })}
+        {/* Duration row — two lanes so neighbors don't collide */}
+        <div className="relative h-10">
+          {durationLabels.map(({ stage, left, width, durationYears, row }) => (
+            <span
+              key={stage.id}
+              className="type-mono-sm absolute -translate-x-1/2 whitespace-nowrap text-dim"
+              style={{
+                left: `${(left + width / 2) * 100}%`,
+                top: row === 0 ? 0 : "1.125rem",
+              }}
+            >
+              {formatLogYears(durationYears)}
+            </span>
+          ))}
         </div>
 
-        <p className="mt-6 type-mono-sm text-bone-3 max-w-xl">
+        <p className="type-mono-sm text-bone-3 max-w-xl">
           Each band is one phase, scaled by the log of its duration. From the
           minute of a helium flash to the hundred billion years of white-dwarf
           cooling, every phase gets a readable slice. The strip is a duration
@@ -155,8 +169,8 @@ export function StageTimeline({ activeStageId }: Props) {
       </div>
 
       {/* ——— Linear strip ——— */}
-      <div>
-        <div className="flex items-baseline justify-between">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
           <span className="type-mono-sm">
             Linear scale · the same time, unflattened
           </span>
@@ -165,68 +179,84 @@ export function StageTimeline({ activeStageId }: Props) {
           </span>
         </div>
 
-        <div className="relative mt-12 h-14 overflow-hidden border-t border-b border-line">
-          <svg
-            width="100%"
-            height="100%"
-            preserveAspectRatio="none"
-            className="absolute inset-0"
-            aria-hidden
-          >
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="rgba(228,199,138,0.02)" />
-                <stop offset="1" stopColor="rgba(228,199,138,0.12)" />
-              </linearGradient>
-            </defs>
-            <rect x="0" y="0" width="100%" height="100%" fill={`url(#${gradientId})`} />
-          </svg>
-
-          {linBands.map(({ stage, left, width }) => {
-            const active = activeStageId === stage.id;
-            const tooThin = width < 0.004;
-            return (
-              <div
-                key={stage.id}
-                className="absolute inset-y-0 transition-colors duration-500"
-                style={{
-                  left: `${left * 100}%`,
-                  width: tooThin ? "2px" : `${width * 100}%`,
-                  background: active
-                    ? "rgba(228,199,138,0.28)"
-                    : tooThin
-                    ? "rgba(228,199,138,0.55)"
-                    : "transparent",
-                  borderRight: tooThin
-                    ? "none"
-                    : "1px solid rgba(236,232,222,0.1)",
-                }}
-                aria-hidden
-              />
-            );
-          })}
-
+        <div className="relative pt-8">
           <div
-            className="pointer-events-none absolute inset-y-0 w-px"
-            style={{ left: `${nowLin * 100}%`, background: "var(--color-accent)" }}
+            className="pointer-events-none absolute top-0 z-10"
+            style={{ left: `${nowLin * 100}%` }}
           >
-            <span
-              className="type-mono-sm absolute -top-7 -translate-x-1/2 whitespace-nowrap text-accent"
-              style={{ left: "0" }}
-            >
+            <span className="type-mono-sm absolute bottom-2 left-0 -translate-x-1/2 whitespace-nowrap text-accent">
               Now
             </span>
-            <span className="type-mono-sm absolute top-1/2 -translate-y-1/2 translate-x-2 whitespace-nowrap text-bone-3">
-              ← 4.6 billion years of main sequence already behind; ~5 billion ahead before anything interesting happens.
-            </span>
+          </div>
+
+          <div className="relative h-14 border-t border-b border-line">
+            <svg
+              width="100%"
+              height="100%"
+              preserveAspectRatio="none"
+              className="absolute inset-0"
+              aria-hidden
+            >
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+                  <stop
+                    offset="0"
+                    stopColor="color-mix(in srgb, var(--color-accent) 2%, transparent)"
+                  />
+                  <stop
+                    offset="1"
+                    stopColor="color-mix(in srgb, var(--color-accent) 12%, transparent)"
+                  />
+                </linearGradient>
+              </defs>
+              <rect
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                fill={`url(#${gradientId})`}
+              />
+            </svg>
+
+            {linBands.map(({ stage, left, width }) => {
+              const active = activeStageId === stage.id;
+              const tooThin = width < 0.004;
+              return (
+                <div
+                  key={stage.id}
+                  className="absolute inset-y-0 transition-colors duration-500"
+                  style={{
+                    left: `${left * 100}%`,
+                    width: tooThin ? "2px" : `${width * 100}%`,
+                    background: active
+                      ? "color-mix(in srgb, var(--color-accent) 28%, transparent)"
+                      : tooThin
+                        ? "color-mix(in srgb, var(--color-accent) 55%, transparent)"
+                        : "transparent",
+                    borderRight: tooThin
+                      ? "none"
+                      : "1px solid var(--color-line)",
+                  }}
+                  aria-hidden
+                />
+              );
+            })}
+
+            <div
+              className="pointer-events-none absolute inset-y-0 w-px"
+              style={{
+                left: `${nowLin * 100}%`,
+                background: "var(--color-accent)",
+              }}
+            />
           </div>
         </div>
 
-        <p className="mt-6 type-mono-sm text-bone-3 max-w-xl">
-          The linear strip restores true proportions. Four-fifths of the
-          sun&rsquo;s working life is the main sequence we&rsquo;re in the
-          middle of; everything after the red-giant turn fits in a sliver you
-          can barely see.
+        <p className="type-mono-sm text-bone-3 max-w-2xl">
+          At 4.6 billion years we sit mid–main-sequence: roughly half the working
+          life already behind, ~5 billion years ahead before the red-giant turn.
+          Four-fifths of the sun&rsquo;s luminous career is this long middle; after
+          turnoff, everything fits in a sliver you can barely see.
         </p>
       </div>
     </div>

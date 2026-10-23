@@ -40,7 +40,7 @@ export function SolarStages() {
         <HRPath activeStageId={activeId} />
       </div>
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-0">
         {STAGES.map((stage) => (
           <div
             key={stage.id}
@@ -49,7 +49,7 @@ export function SolarStages() {
               if (el) refs.current.set(stage.id, el);
               else refs.current.delete(stage.id);
             }}
-            className="py-10"
+            className="scroll-mt-24"
           >
             <StageCard stage={stage} />
           </div>
