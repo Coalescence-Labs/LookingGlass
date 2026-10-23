@@ -35,7 +35,7 @@ const DEFAULT: CostScenario = {
 };
 
 const underlineField =
-  "w-full border-0 border-b border-line bg-transparent px-0 py-2 type-mono text-[0.85rem] text-bone outline-none transition-colors hover:border-line-2 focus:border-accent";
+  "w-full border-0 border-b border-line bg-transparent px-0 py-2 type-mono text-[0.85rem] text-bone outline-none transition-colors hover:border-line-2 focus:border-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
 function Segmented<T extends string>({
   value,
@@ -141,7 +141,7 @@ function NumberField({
           const n = e.target.valueAsNumber;
           onChange(Number.isFinite(n) ? n : 0);
         }}
-        className={underlineField}
+        className={`${underlineField}${suffix ? " pr-10" : ""}`}
       />
       {suffix ? (
         <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 type-mono-sm text-dim">
