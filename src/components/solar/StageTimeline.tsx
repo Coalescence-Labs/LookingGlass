@@ -1,6 +1,13 @@
 "use client";
 
-import { useId, useMemo } from "react";
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   SECONDS_PER_YEAR,
   STAGES,
@@ -16,21 +23,22 @@ type Props = {
   activeStageId?: Stage["id"];
 };
 
-const MIN_YEARS = 60 / SECONDS_PER_YEAR; // a minute, in years — floor for the log map
+const MIN_YEARS = 60 / SECONDS_PER_YEAR;
 const LOG_BASE = Math.log10(MIN_YEARS);
-const LOG_OFFSET = 1; // ensures the shortest event gets a visible slice
+const LOG_OFFSET = 1;
 
-/** First ~12 Gyr: everything before white-dwarf cooling dominates the linear axis. */
-const EARLY_ZOOM_GYR = 12;
+/** Default loupe covers collapse through planetary nebula. */
+const LOUPE_DEFAULT_END_GYR = 12;
+const LOUPE_MIN_SPAN_GYR = 2;
 
-const SHORT_NAME: Partial<Record<StageId, string>> = {
+const SHORT_NAME: Record<StageId, string> = {
   collapse: "Collapse",
   "main-sequence": "Main sequence",
-  rgb: "RGB",
-  "helium-flash": "He flash",
-  "horizontal-branch": "HB",
+  rgb: "Red giant",
+  "helium-flash": "Helium flash",
+  "horizontal-branch": "Horizontal branch",
   agb: "AGB",
-  "planetary-nebula": "PN",
+  "planetary-nebula": "Planetary nebula",
   "white-dwarf": "White dwarf",
 };
 
@@ -42,336 +50,226 @@ function linPos(gyr: number, span = TOTAL_GYR): number {
   return Math.min(1, Math.max(0, gyr / span));
 }
 
-function bandName(stage: Stage, width: number): string {
-  if (stage.isEvent) return SHORT_NAME[stage.id] ?? stage.name;
-  if (width < 0.11) return SHORT_NAME[stage.id] ?? stage.name;
-  return stage.name;
-}
-
-function bandFill(stage: Stage, active: boolean, emphasis = false): string {
+function bandFill(stage: Stage, active: boolean): string {
   if (stage.isEvent) {
     return active
       ? "color-mix(in srgb, var(--color-accent) 55%, transparent)"
-      : "color-mix(in srgb, var(--color-accent) 32%, transparent)";
+      : "color-mix(in srgb, var(--color-accent) 38%, transparent)";
   }
   if (active) {
-    return "color-mix(in srgb, var(--color-accent) 16%, transparent)";
+    return "color-mix(in srgb, var(--color-accent) 22%, transparent)";
   }
-  if (emphasis) {
-    return "color-mix(in srgb, var(--color-accent) 8%, transparent)";
+  if (stage.id === "main-sequence") {
+    return "color-mix(in srgb, var(--color-accent) 12%, transparent)";
+  }
+  if (stage.id === "white-dwarf") {
+    return "color-mix(in srgb, var(--color-accent) 5%, transparent)";
   }
   return "var(--color-glass)";
 }
 
 export function StageTimeline({ activeStageId }: Props) {
   const gradientId = useId();
-  const zoomGradientId = useId();
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
 
-  const logBands = useMemo(() => {
+  const [loupeEnd, setLoupeEnd] = useState(LOUPE_DEFAULT_END_GYR);
+
+  const logRows = useMemo(() => {
     const weights = STAGES.map((s) => logDurationWeight(stageDurationYears(s)));
-    const total = weights.reduce((a, b) => a + b, 0);
-    const widths = weights.map((w) => w / total);
+    const max = Math.max(...weights);
     return STAGES.map((stage, i) => ({
       stage,
-      left: widths.slice(0, i).reduce((a, b) => a + b, 0),
-      width: widths[i],
+      barPct: (weights[i] / max) * 100,
       durationYears: stageDurationYears(stage),
     }));
   }, []);
 
-  const linBands = useMemo(
-    () =>
-      STAGES.map((s) => {
-        const left = linPos(s.startGyr);
-        const right = linPos(s.startGyr + s.durationGyr);
-        return { stage: s, left, width: Math.max(0.0005, right - left) };
-      }),
-    [],
+  const loupeEndClamped = Math.min(
+    TOTAL_GYR,
+    Math.max(LOUPE_MIN_SPAN_GYR, loupeEnd),
   );
 
-  const earlyBands = useMemo(() => {
-    return STAGES.filter((s) => s.startGyr < EARLY_ZOOM_GYR).map((s) => {
-      const end = Math.min(s.startGyr + s.durationGyr, EARLY_ZOOM_GYR);
-      const left = linPos(s.startGyr, EARLY_ZOOM_GYR);
-      const right = linPos(end, EARLY_ZOOM_GYR);
+  const loupeBands = useMemo(() => {
+    return STAGES.filter((s) => s.startGyr < loupeEndClamped).map((s) => {
+      const end = Math.min(s.startGyr + s.durationGyr, loupeEndClamped);
+      const left = linPos(s.startGyr, loupeEndClamped);
+      const right = linPos(end, loupeEndClamped);
       return {
         stage: s,
         left,
-        width: Math.max(s.isEvent ? 0.012 : 0.004, right - left),
+        width: Math.max(s.isEvent ? 0.014 : 0.003, right - left),
       };
     });
+  }, [loupeEndClamped]);
+
+  const nowLin = linPos(SUN_CURRENT_AGE_GYR);
+  const nowLoupe = linPos(SUN_CURRENT_AGE_GYR, loupeEndClamped);
+  const loupeWidthPct = linPos(loupeEndClamped) * 100;
+  const wdStage = STAGES.find((s) => s.id === "white-dwarf")!;
+  const wdSharePct = Math.round((wdStage.durationGyr / TOTAL_GYR) * 100);
+
+  const applyPointer = useCallback((clientX: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const t = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const gyr = t * TOTAL_GYR;
+    // Loupe always opens from t=0 (birth); the handle sets how far early life expands.
+    setLoupeEnd(Math.max(LOUPE_MIN_SPAN_GYR, Math.min(TOTAL_GYR * 0.45, gyr)));
   }, []);
 
-  const earlyEndLin = linPos(EARLY_ZOOM_GYR);
-
-  // Two-row stagger so adjacent duration labels don't collide.
-  const durationLabels = useMemo(
-    () =>
-      logBands.map((band, i) => ({
-        ...band,
-        row: (i % 2) as 0 | 1,
-      })),
-    [logBands],
+  const onPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLElement>) => {
+      dragging.current = true;
+      trackRef.current?.setPointerCapture(e.pointerId);
+      applyPointer(e.clientX);
+    },
+    [applyPointer],
   );
 
-  // "Now" lives inside the main-sequence band. Position linearly by progress.
-  const msBand = logBands.find((b) => b.stage.id === "main-sequence");
-  const msProgress = msBand
-    ? (SUN_CURRENT_AGE_GYR - msBand.stage.startGyr) / msBand.stage.durationGyr
-    : 0;
-  const nowLog = msBand ? msBand.left + msBand.width * msProgress : 0;
-  const nowLin = linPos(SUN_CURRENT_AGE_GYR);
-  const nowEarly = linPos(SUN_CURRENT_AGE_GYR, EARLY_ZOOM_GYR);
+  const onPointerMove = useCallback(
+    (e: ReactPointerEvent<HTMLElement>) => {
+      if (!dragging.current) return;
+      applyPointer(e.clientX);
+    },
+    [applyPointer],
+  );
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
 
   return (
-    <div className="flex flex-col gap-16 md:gap-20">
-      {/* ——— Log-duration strip ——— */}
+    <div
+      className="border border-line p-5 md:p-8"
+      style={{ background: "rgba(15, 15, 18, 0.6)" }}
+    >
+      {/* ——— Duration ladder (log) ——— */}
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <span className="type-mono-sm">
-            Log duration · each phase, sized by how long it takes
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-line pb-4">
+          <span className="type-mono-sm">Duration ladder · log scale</span>
+          <span className="type-mono-sm text-bone-3">
+            minute → {formatLogYears(stageDurationYears(STAGES[STAGES.length - 1]))}
           </span>
-          <span className="type-mono-sm text-bone-3">minutes → 10¹¹ yr</span>
         </div>
 
-        {/* Marker lane reserved above the strip so "Now" never collides with the title. */}
-        <div className="relative pt-8">
-          <div
-            className="pointer-events-none absolute top-0 z-10"
-            style={{ left: `${nowLog * 100}%` }}
-          >
-            <span className="type-mono-sm absolute bottom-2 left-0 -translate-x-1/2 whitespace-nowrap text-accent">
-              Now · 4.6 Gyr
-            </span>
-          </div>
-
-          <div className="relative h-24 border-t border-b border-line">
-            {logBands.map(({ stage, left, width }) => {
-              const active = activeStageId === stage.id;
-              const label = bandName(stage, width);
-              // Events always get a name — the He-flash band is wide enough to
-              // look intentional but used to sit just under the old inline cutoff.
-              const showName = stage.isEvent || width >= 0.055;
-              return (
-                <div
-                  key={stage.id}
-                  className="absolute inset-y-0 overflow-hidden transition-[background] duration-500"
-                  style={{
-                    left: `${left * 100}%`,
-                    width: `${width * 100}%`,
-                    background: bandFill(stage, active),
-                    borderLeft: "1px solid var(--color-line-2)",
-                  }}
-                  aria-hidden
-                >
-                  {showName && (
-                    <span
-                      className="type-mono-sm absolute bottom-2 left-2 max-w-[calc(100%-0.75rem)] truncate"
-                      style={{
-                        color: active || stage.isEvent
+        <ol className="flex flex-col">
+          {logRows.map(({ stage, barPct, durationYears }) => {
+            const active = activeStageId === stage.id;
+            const isNow =
+              stage.id === "main-sequence" &&
+              SUN_CURRENT_AGE_GYR >= stage.startGyr &&
+              SUN_CURRENT_AGE_GYR < stage.startGyr + stage.durationGyr;
+            return (
+              <li
+                key={stage.id}
+                className="grid grid-cols-[minmax(7.5rem,11rem)_1fr_auto] items-center gap-3 border-b border-line py-3.5 md:grid-cols-[minmax(10rem,14rem)_1fr_minmax(5.5rem,7rem)] md:gap-6"
+              >
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span
+                    className="font-serif text-[1.05rem] leading-tight md:text-[1.15rem]"
+                    style={{
+                      color:
+                        active || stage.isEvent
                           ? "var(--color-accent)"
-                          : "var(--color-bone-3)",
-                      }}
-                    >
-                      {label}
-                    </span>
+                          : "var(--color-bone)",
+                    }}
+                  >
+                    {SHORT_NAME[stage.id]}
+                  </span>
+                  {isNow && (
+                    <span className="type-mono-sm text-accent">Now · 4.6 Gyr</span>
+                  )}
+                  {stage.isEvent && !isNow && (
+                    <span className="type-mono-sm text-accent">Event</span>
                   )}
                 </div>
-              );
-            })}
 
-            <div
-              className="pointer-events-none absolute inset-y-0 w-px"
-              style={{
-                left: `${nowLog * 100}%`,
-                background: "var(--color-accent)",
-              }}
-            />
-          </div>
-        </div>
+                <div
+                  className="relative h-2 w-full"
+                  style={{ background: "var(--color-line)" }}
+                  aria-hidden
+                >
+                  <div
+                    className="absolute inset-y-0 left-0 transition-[width,background] duration-500"
+                    style={{
+                      width: `${barPct}%`,
+                      background: bandFill(stage, active),
+                      boxShadow: stage.isEvent
+                        ? "inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, transparent)"
+                        : undefined,
+                    }}
+                  />
+                </div>
 
-        {/* Duration row — two lanes so neighbors don't collide */}
-        <div className="relative h-10">
-          {durationLabels.map(({ stage, left, width, durationYears, row }) => (
-            <span
-              key={stage.id}
-              className="type-mono-sm absolute -translate-x-1/2 whitespace-nowrap text-dim"
-              style={{
-                left: `${(left + width / 2) * 100}%`,
-                top: row === 0 ? 0 : "1.125rem",
-              }}
-            >
-              {formatLogYears(durationYears)}
-            </span>
-          ))}
-        </div>
+                <span className="type-mono-sm text-right text-dim tabular-nums">
+                  {formatLogYears(durationYears)}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
 
-        <p className="type-mono-sm text-bone-3 max-w-xl">
-          Each band is one phase, scaled by the log of its duration — so the
+        <p className="type-body max-w-2xl">
+          Each row is one phase, sized by the log of how long it lasts — so the
           minute of a helium flash and the hundred-billion-year white-dwarf cool
-          both get a readable slice. This is a duration ladder, not a clock; the
-          linear pair below is true time.
+          both get a readable bar. This is a duration ladder, not a clock.
         </p>
       </div>
 
-      {/* ——— Linear strip + early zoom ——— */}
-      <div className="flex flex-col gap-6">
+      {/* ——— True clock (linear) + loupe ——— */}
+      <div className="mt-12 flex flex-col gap-6 border-t border-line pt-10 md:mt-14 md:pt-12">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <span className="type-mono-sm">
-            Linear scale · the same time, unflattened
-          </span>
+          <span className="type-mono-sm">True clock · linear scale</span>
           <span className="type-mono-sm text-bone-3">
             0 → {Math.round(TOTAL_GYR)} billion years
           </span>
         </div>
 
-        {/* Full career */}
-        <div className="relative pt-8">
-          <div
-            className="pointer-events-none absolute top-0 z-10"
-            style={{ left: `${nowLin * 100}%` }}
-          >
-            <span className="type-mono-sm absolute bottom-2 left-0 whitespace-nowrap text-accent">
-              Now
-            </span>
-          </div>
-
-          <div className="relative h-14 border-t border-b border-line">
-            <svg
-              width="100%"
-              height="100%"
-              preserveAspectRatio="none"
-              className="absolute inset-0"
-              aria-hidden
-            >
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-                  <stop
-                    offset="0"
-                    stopColor="color-mix(in srgb, var(--color-accent) 2%, transparent)"
-                  />
-                  <stop
-                    offset="1"
-                    stopColor="color-mix(in srgb, var(--color-accent) 12%, transparent)"
-                  />
-                </linearGradient>
-              </defs>
-              <rect
-                x="0"
-                y="0"
-                width="100%"
-                height="100%"
-                fill={`url(#${gradientId})`}
-              />
-            </svg>
-
-            {linBands.map(({ stage, left, width }) => {
-              const active = activeStageId === stage.id;
-              const tooThin = width < 0.004;
-              const isWd = stage.id === "white-dwarf";
-              return (
-                <div
-                  key={stage.id}
-                  className="absolute inset-y-0 overflow-hidden transition-colors duration-500"
-                  style={{
-                    left: `${left * 100}%`,
-                    width: tooThin ? "2px" : `${width * 100}%`,
-                    background: active
-                      ? "color-mix(in srgb, var(--color-accent) 28%, transparent)"
-                      : tooThin
-                        ? "color-mix(in srgb, var(--color-accent) 55%, transparent)"
-                        : isWd
-                          ? "color-mix(in srgb, var(--color-accent) 6%, transparent)"
-                          : "transparent",
-                    borderRight: tooThin
-                      ? "none"
-                      : "1px solid var(--color-line)",
-                  }}
-                  aria-hidden
-                >
-                  {isWd && (
-                    <span className="type-mono-sm absolute bottom-2 left-3 text-bone-3">
-                      White dwarf · cooling (~10¹¹ yr)
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Bracket under the compressed early life */}
-            <div
-              className="pointer-events-none absolute -bottom-5 h-px"
-              style={{
-                left: 0,
-                width: `${earlyEndLin * 100}%`,
-                background: "var(--color-line-2)",
-              }}
-              aria-hidden
-            />
-
-            <div
-              className="pointer-events-none absolute inset-y-0 w-px"
-              style={{
-                left: `${nowLin * 100}%`,
-                background: "var(--color-accent)",
-              }}
-            />
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <span className="type-mono-sm text-dim">
-              ← early life (~{EARLY_ZOOM_GYR} Gyr) — a sliver on this axis
-            </span>
-            <span className="type-mono-sm text-dim">
-              white dwarf fills the rest →
-            </span>
-          </div>
-        </div>
-
-        {/* Early-life zoom */}
-        <div className="flex flex-col gap-4 border-t border-line pt-8">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-            <span className="type-mono-sm">
-              Early life · first {EARLY_ZOOM_GYR} Gyr, expanded
-            </span>
-            <span className="type-mono-sm text-bone-3">
-              collapse → planetary nebula
-            </span>
-          </div>
-
-          <div className="relative pt-8">
+        {/* Full career with draggable loupe bracket */}
+        <div className="flex flex-col gap-3">
+          <div className="relative pt-7">
             <div
               className="pointer-events-none absolute top-0 z-10"
-              style={{ left: `${nowEarly * 100}%` }}
+              style={{ left: `${nowLin * 100}%` }}
             >
               <span className="type-mono-sm absolute bottom-2 left-0 -translate-x-1/2 whitespace-nowrap text-accent">
-                Now · 4.6 Gyr
+                Now
               </span>
             </div>
 
-            <div className="relative h-16 border-t border-b border-line">
+            <div
+              ref={trackRef}
+              className="relative h-11 touch-none select-none border-t border-b border-line cursor-ew-resize"
+              style={{ background: "rgba(9,9,11,0.45)" }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
+              role="slider"
+              aria-label="Early-life loupe end"
+              aria-valuemin={LOUPE_MIN_SPAN_GYR}
+              aria-valuemax={Math.round(TOTAL_GYR * 0.45)}
+              aria-valuenow={Math.round(loupeEndClamped)}
+              aria-valuetext={`Loupe covers first ${loupeEndClamped.toFixed(0)} billion years`}
+            >
               <svg
                 width="100%"
                 height="100%"
                 preserveAspectRatio="none"
-                className="absolute inset-0"
+                className="pointer-events-none absolute inset-0"
                 aria-hidden
               >
                 <defs>
-                  <linearGradient
-                    id={zoomGradientId}
-                    x1="0"
-                    y1="0"
-                    x2="1"
-                    y2="0"
-                  >
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
                     <stop
                       offset="0"
                       stopColor="color-mix(in srgb, var(--color-accent) 3%, transparent)"
                     />
                     <stop
                       offset="1"
-                      stopColor="color-mix(in srgb, var(--color-accent) 8%, transparent)"
+                      stopColor="color-mix(in srgb, var(--color-accent) 10%, transparent)"
                     />
                   </linearGradient>
                 </defs>
@@ -380,17 +278,104 @@ export function StageTimeline({ activeStageId }: Props) {
                   y="0"
                   width="100%"
                   height="100%"
-                  fill={`url(#${zoomGradientId})`}
+                  fill={`url(#${gradientId})`}
                 />
               </svg>
 
-              {earlyBands.map(({ stage, left, width }) => {
+              {/* Loupe window highlight */}
+              <div
+                className="pointer-events-none absolute inset-y-0"
+                style={{
+                  left: 0,
+                  width: `${loupeWidthPct}%`,
+                  background:
+                    "color-mix(in srgb, var(--color-accent) 10%, transparent)",
+                  borderRight: "1px solid var(--color-accent)",
+                }}
+              />
+
+              {/* End handle (visual; track owns the drag) */}
+              <div
+                className="pointer-events-none absolute top-1/2 z-20 h-8 w-3 -translate-x-1/2 -translate-y-1/2 border border-accent bg-ink-2"
+                style={{ left: `${loupeWidthPct}%` }}
+                aria-hidden
+              />
+
+              {/* Thin phase ticks for early life */}
+              {STAGES.filter((s) => s.startGyr < loupeEndClamped && !s.isEvent).map(
+                (s) => (
+                  <div
+                    key={s.id}
+                    className="pointer-events-none absolute inset-y-0 w-px"
+                    style={{
+                      left: `${linPos(s.startGyr) * 100}%`,
+                      background: "var(--color-line-2)",
+                    }}
+                  />
+                ),
+              )}
+
+              <div
+                className="pointer-events-none absolute inset-y-0 w-px"
+                style={{
+                  left: `${nowLin * 100}%`,
+                  background: "var(--color-accent)",
+                }}
+              />
+
+              <span className="pointer-events-none absolute bottom-2 right-3 type-mono-sm text-bone-3">
+                White dwarf cooling
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <span className="type-mono-sm text-dim">
+              Drag the handle — loupe covers the first{" "}
+              {loupeEndClamped >= 10
+                ? Math.round(loupeEndClamped)
+                : loupeEndClamped.toFixed(1)}{" "}
+              Gyr
+            </span>
+            <span className="type-mono-sm text-dim">
+              ~{wdSharePct}% of the bar is white dwarf
+            </span>
+          </div>
+        </div>
+
+        {/* Loupe detail — one insight: luminous career readable */}
+        <div className="flex flex-col gap-4 border border-line-2 p-4 md:p-5"
+          style={{ background: "rgba(9,9,11,0.4)" }}
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+            <span className="type-mono-sm text-accent">
+              Loupe · first {loupeEndClamped >= 10
+                ? Math.round(loupeEndClamped)
+                : loupeEndClamped.toFixed(1)}{" "}
+              Gyr expanded
+            </span>
+            <span className="type-mono-sm text-bone-3">
+              collapse →{" "}
+              {loupeEndClamped >= 11 ? "planetary nebula" : "mid-career"}
+            </span>
+          </div>
+
+          <div className="relative pt-7">
+            <div
+              className="pointer-events-none absolute top-0 z-10"
+              style={{ left: `${Math.min(0.98, nowLoupe) * 100}%` }}
+            >
+              <span className="type-mono-sm absolute bottom-2 left-0 -translate-x-1/2 whitespace-nowrap text-accent">
+                Now · 4.6 Gyr
+              </span>
+            </div>
+
+            <div className="relative h-14 border-t border-b border-line">
+              {loupeBands.map(({ stage, left, width }) => {
                 const active = activeStageId === stage.id;
-                const showName =
-                  stage.id === "main-sequence" ||
-                  stage.isEvent ||
-                  width >= 0.08;
-                const label = bandName(stage, width);
+                // Only the main-sequence band is wide enough for an in-band name;
+                // thinner phases are keyed below — no truncate theater.
+                const showInside = stage.id === "main-sequence" || width >= 0.12;
                 return (
                   <div
                     key={stage.id}
@@ -398,26 +383,22 @@ export function StageTimeline({ activeStageId }: Props) {
                     style={{
                       left: `${left * 100}%`,
                       width: `${width * 100}%`,
-                      background: bandFill(
-                        stage,
-                        active,
-                        stage.id === "main-sequence",
-                      ),
+                      background: bandFill(stage, active),
                       borderLeft: "1px solid var(--color-line-2)",
                     }}
+                    title={`${stage.name} · ${formatLogYears(stageDurationYears(stage))}`}
                     aria-hidden
                   >
-                    {showName && (
+                    {showInside && (
                       <span
-                        className="type-mono-sm absolute bottom-2 left-2 max-w-[calc(100%-0.75rem)] truncate"
+                        className="absolute bottom-2 left-2 font-serif text-[0.8rem] leading-none"
                         style={{
-                          color:
-                            active || stage.isEvent
-                              ? "var(--color-accent)"
-                              : "var(--color-bone-3)",
+                          color: active
+                            ? "var(--color-accent)"
+                            : "var(--color-bone-3)",
                         }}
                       >
-                        {label}
+                        {SHORT_NAME[stage.id]}
                       </span>
                     )}
                   </div>
@@ -427,32 +408,52 @@ export function StageTimeline({ activeStageId }: Props) {
               <div
                 className="pointer-events-none absolute inset-y-0 w-px"
                 style={{
-                  left: `${nowEarly * 100}%`,
+                  left: `${Math.min(0.98, nowLoupe) * 100}%`,
                   background: "var(--color-accent)",
                 }}
               />
             </div>
           </div>
 
-          {/* Tick labels for the zoom */}
-          <div className="relative h-5">
-            {[0, 5, 10, EARLY_ZOOM_GYR].map((gyr) => (
-              <span
-                key={gyr}
-                className="type-mono-sm absolute -translate-x-1/2 text-dim"
-                style={{ left: `${linPos(gyr, EARLY_ZOOM_GYR) * 100}%` }}
-              >
-                {gyr} Gyr
-              </span>
-            ))}
-          </div>
+          {/* External key for thin loupe bands — names live here, not truncated inside */}
+          <ul className="flex flex-wrap gap-x-5 gap-y-2">
+            {loupeBands
+              .filter(
+                ({ stage, width }) =>
+                  stage.id !== "main-sequence" && width < 0.12,
+              )
+              .map(({ stage }) => (
+                <li key={stage.id} className="flex items-baseline gap-2">
+                  <span
+                    className="inline-block h-2 w-2 shrink-0"
+                    style={{ background: bandFill(stage, false) }}
+                    aria-hidden
+                  />
+                  <span
+                    className="font-serif text-[0.95rem]"
+                    style={{
+                      color: stage.isEvent
+                        ? "var(--color-accent)"
+                        : "var(--color-bone-2)",
+                    }}
+                  >
+                    {stage.isEvent ? "Helium flash" : SHORT_NAME[stage.id]}
+                  </span>
+                  <span className="type-mono-sm text-dim">
+                    {stage.isEvent
+                      ? "~1 min"
+                      : formatLogYears(stageDurationYears(stage))}
+                  </span>
+                </li>
+              ))}
+          </ul>
         </div>
 
-        <p className="type-mono-sm text-bone-3 max-w-2xl">
-          On a true clock, white-dwarf cooling owns almost the whole bar. The
+        <p className="type-body max-w-2xl">
+          On a true clock, white-dwarf cooling owns nearly the whole bar. The
           luminous career — Now mid–main-sequence, then a brief giant sequence —
-          is the left-edge sliver expanded above. That contrast is the point of
-          the pair.
+          is the left-edge sliver the loupe expands. Nearly all of that luminous
+          life is the main sequence we&rsquo;re already in.
         </p>
       </div>
     </div>

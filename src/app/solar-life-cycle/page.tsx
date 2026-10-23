@@ -114,15 +114,15 @@ export default function SolarLifeCyclePage() {
                 The whole life, at a glance
               </h2>
             </div>
-            <span className="type-mono-sm">Two scales of the same timeline</span>
+            <span className="type-mono-sm">Duration ladder · true clock</span>
           </div>
         </Reveal>
 
         <Reveal delay={0.08}>
           <p className="mt-8 type-lede max-w-2xl">
-            Log makes every phase readable — including the minute of a helium
-            flash. Linear tells the truth of proportion: the luminous career is
-            a left-edge sliver; white-dwarf cooling owns the rest.
+            First the duration ladder — every phase sized by how long it lasts,
+            helium flash included. Then the true clock: drag the loupe across
+            the left-edge sliver and watch white-dwarf cooling reclaim the bar.
           </p>
         </Reveal>
 
