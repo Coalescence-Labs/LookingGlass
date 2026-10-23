@@ -117,6 +117,20 @@ export const VIDEO_FORMAT_MULTIPLIER: Record<VideoFormatBand, number> = {
   high: 1.5,
 };
 
+/** Hard caps — keeps the calculator honest and the layout intact. */
+export const SCENARIO_LIMITS = {
+  tokens: 10_000_000, // largest public context windows today
+  words: 7_500_000,
+  chars: 40_000_000,
+  outputTokens: 1_000_000,
+  images: 500,
+  audioSeconds: 86_400, // 24h
+  videoSeconds: 14_400, // 4h
+  cacheHitPercent: 100,
+  requestsPerDay: 1_000_000,
+  users: 100_000,
+} as const;
+
 export const PRICING_SNAPSHOT: PricingSnapshot = {
   verifiedDate: "2026-10-22",
   models: [
@@ -335,11 +349,56 @@ export function calculateCost(scenario: CostScenario): CostResult {
     throw new Error(`Unknown model: ${scenario.modelId}`);
   }
 
-  const notes: string[] = [];
-  const parts = modalityTokens(scenario);
-  const output = Math.max(0, scenario.outputTokens);
+  // Clamp again so direct callers (and stale UI state) stay bounded.
+  const capped: CostScenario = {
+    ...scenario,
+    text: scenario.text
+      ? clampTextInput(scenario.text)
+      : undefined,
+    images: scenario.images
+      ? {
+          ...scenario.images,
+          count: clamp(scenario.images.count, 0, SCENARIO_LIMITS.images),
+        }
+      : undefined,
+    audioSeconds:
+      scenario.audioSeconds != null
+        ? clamp(scenario.audioSeconds, 0, SCENARIO_LIMITS.audioSeconds)
+        : undefined,
+    video: scenario.video
+      ? {
+          ...scenario.video,
+          seconds: clamp(
+            scenario.video.seconds,
+            0,
+            SCENARIO_LIMITS.videoSeconds,
+          ),
+        }
+      : undefined,
+    cacheHitPercent:
+      scenario.cacheHitPercent != null
+        ? clamp(scenario.cacheHitPercent, 0, SCENARIO_LIMITS.cacheHitPercent)
+        : undefined,
+    outputTokens: clamp(
+      scenario.outputTokens,
+      0,
+      SCENARIO_LIMITS.outputTokens,
+    ),
+    requestsPerDay:
+      scenario.requestsPerDay != null
+        ? clamp(scenario.requestsPerDay, 0, SCENARIO_LIMITS.requestsPerDay)
+        : undefined,
+    users:
+      scenario.users != null
+        ? clamp(scenario.users, 1, SCENARIO_LIMITS.users)
+        : undefined,
+  };
 
-  const cachePct = clamp(scenario.cacheHitPercent ?? 0, 0, 100) / 100;
+  const notes: string[] = [];
+  const parts = modalityTokens(capped);
+  const output = capped.outputTokens;
+
+  const cachePct = (capped.cacheHitPercent ?? 0) / 100;
   let cachedText = parts.text * cachePct;
   let uncachedText = parts.text - cachedText;
 
@@ -384,8 +443,8 @@ export function calculateCost(scenario: CostScenario): CostResult {
     perRequestUsd,
   };
 
-  const requestsPerDay = scenario.requestsPerDay ?? 0;
-  const users = scenario.users ?? 1;
+  const requestsPerDay = capped.requestsPerDay ?? 0;
+  const users = capped.users ?? 1;
   let monthly: CostResult["monthly"];
   if (requestsPerDay > 0) {
     const requests = requestsPerDay * users * 30;
@@ -406,6 +465,26 @@ function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 
+function clampTextInput(text: TextInput): TextInput {
+  switch (text.mode) {
+    case "tokens":
+      return {
+        mode: "tokens",
+        tokens: clamp(text.tokens, 0, SCENARIO_LIMITS.tokens),
+      };
+    case "words":
+      return {
+        mode: "words",
+        words: clamp(text.words, 0, SCENARIO_LIMITS.words),
+      };
+    case "chars":
+      return {
+        mode: "chars",
+        chars: clamp(text.chars, 0, SCENARIO_LIMITS.chars),
+      };
+  }
+}
+
 /** Coerce a POST body into a CostScenario or return an error string. */
 export function parseCostScenario(
   body: unknown,
@@ -422,9 +501,15 @@ export function parseCostScenario(
     return { ok: false, error: `Unknown modelId: ${b.modelId}` };
   }
 
-  const outputTokens = asNonNegNumber(b.outputTokens);
+  const outputTokens = asBoundedNumber(
+    b.outputTokens,
+    SCENARIO_LIMITS.outputTokens,
+  );
   if (outputTokens == null) {
-    return { ok: false, error: "outputTokens must be a non-negative number." };
+    return {
+      ok: false,
+      error: `outputTokens must be between 0 and ${SCENARIO_LIMITS.outputTokens.toLocaleString("en-US")}.`,
+    };
   }
 
   const scenario: CostScenario = {
@@ -443,9 +528,12 @@ export function parseCostScenario(
       return { ok: false, error: "images must be an object." };
     }
     const img = b.images as Record<string, unknown>;
-    const count = asNonNegNumber(img.count);
+    const count = asBoundedNumber(img.count, SCENARIO_LIMITS.images);
     if (count == null) {
-      return { ok: false, error: "images.count must be a non-negative number." };
+      return {
+        ok: false,
+        error: `images.count must be between 0 and ${SCENARIO_LIMITS.images}.`,
+      };
     }
     const size = img.size;
     if (size !== "small" && size !== "medium" && size !== "large") {
@@ -458,9 +546,12 @@ export function parseCostScenario(
   }
 
   if (b.audioSeconds != null) {
-    const audio = asNonNegNumber(b.audioSeconds);
+    const audio = asBoundedNumber(b.audioSeconds, SCENARIO_LIMITS.audioSeconds);
     if (audio == null) {
-      return { ok: false, error: "audioSeconds must be a non-negative number." };
+      return {
+        ok: false,
+        error: `audioSeconds must be between 0 and ${SCENARIO_LIMITS.audioSeconds.toLocaleString("en-US")}.`,
+      };
     }
     scenario.audioSeconds = audio;
   }
@@ -470,11 +561,11 @@ export function parseCostScenario(
       return { ok: false, error: "video must be an object." };
     }
     const v = b.video as Record<string, unknown>;
-    const seconds = asNonNegNumber(v.seconds);
+    const seconds = asBoundedNumber(v.seconds, SCENARIO_LIMITS.videoSeconds);
     if (seconds == null) {
       return {
         ok: false,
-        error: "video.seconds must be a non-negative number.",
+        error: `video.seconds must be between 0 and ${SCENARIO_LIMITS.videoSeconds.toLocaleString("en-US")}.`,
       };
     }
     const format = v.format;
@@ -488,8 +579,11 @@ export function parseCostScenario(
   }
 
   if (b.cacheHitPercent != null) {
-    const pct = asNonNegNumber(b.cacheHitPercent);
-    if (pct == null || pct > 100) {
+    const pct = asBoundedNumber(
+      b.cacheHitPercent,
+      SCENARIO_LIMITS.cacheHitPercent,
+    );
+    if (pct == null) {
       return {
         ok: false,
         error: "cacheHitPercent must be a number between 0 and 100.",
@@ -499,20 +593,26 @@ export function parseCostScenario(
   }
 
   if (b.requestsPerDay != null) {
-    const r = asNonNegNumber(b.requestsPerDay);
+    const r = asBoundedNumber(
+      b.requestsPerDay,
+      SCENARIO_LIMITS.requestsPerDay,
+    );
     if (r == null) {
       return {
         ok: false,
-        error: "requestsPerDay must be a non-negative number.",
+        error: `requestsPerDay must be between 0 and ${SCENARIO_LIMITS.requestsPerDay.toLocaleString("en-US")}.`,
       };
     }
     scenario.requestsPerDay = r;
   }
 
   if (b.users != null) {
-    const u = asNonNegNumber(b.users);
+    const u = asBoundedNumber(b.users, SCENARIO_LIMITS.users);
     if (u == null || u < 1) {
-      return { ok: false, error: "users must be a number ≥ 1." };
+      return {
+        ok: false,
+        error: `users must be between 1 and ${SCENARIO_LIMITS.users.toLocaleString("en-US")}.`,
+      };
     }
     scenario.users = u;
   }
@@ -530,23 +630,32 @@ function parseTextInput(
   }
   const t = raw as Record<string, unknown>;
   if (t.mode === "tokens") {
-    const tokens = asNonNegNumber(t.tokens);
+    const tokens = asBoundedNumber(t.tokens, SCENARIO_LIMITS.tokens);
     if (tokens == null) {
-      return { ok: false, error: "text.tokens must be a non-negative number." };
+      return {
+        ok: false,
+        error: `text.tokens must be between 0 and ${SCENARIO_LIMITS.tokens.toLocaleString("en-US")}.`,
+      };
     }
     return { ok: true, value: { mode: "tokens", tokens } };
   }
   if (t.mode === "words") {
-    const words = asNonNegNumber(t.words);
+    const words = asBoundedNumber(t.words, SCENARIO_LIMITS.words);
     if (words == null) {
-      return { ok: false, error: "text.words must be a non-negative number." };
+      return {
+        ok: false,
+        error: `text.words must be between 0 and ${SCENARIO_LIMITS.words.toLocaleString("en-US")}.`,
+      };
     }
     return { ok: true, value: { mode: "words", words } };
   }
   if (t.mode === "chars") {
-    const chars = asNonNegNumber(t.chars);
+    const chars = asBoundedNumber(t.chars, SCENARIO_LIMITS.chars);
     if (chars == null) {
-      return { ok: false, error: "text.chars must be a non-negative number." };
+      return {
+        ok: false,
+        error: `text.chars must be between 0 and ${SCENARIO_LIMITS.chars.toLocaleString("en-US")}.`,
+      };
     }
     return { ok: true, value: { mode: "chars", chars } };
   }
@@ -556,16 +665,25 @@ function parseTextInput(
   };
 }
 
-function asNonNegNumber(v: unknown): number | null {
-  if (typeof v !== "number" || !Number.isFinite(v) || v < 0) return null;
+/** Finite, non-negative, and ≤ max. */
+function asBoundedNumber(v: unknown, max: number): number | null {
+  if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > max) {
+    return null;
+  }
   return v;
 }
 
 export function formatCostUsd(n: number): string {
-  if (n === 0) return "$0";
+  if (!Number.isFinite(n) || n === 0) return "$0";
   if (n < 0.0001) return `$${n.toExponential(2)}`;
   if (n < 0.01) return `$${n.toFixed(4)}`;
   if (n < 1) return `$${n.toFixed(3)}`;
   if (n < 100) return `$${n.toFixed(2)}`;
-  return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  if (n < 1_000_000) {
+    return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  }
+  if (n < 1_000_000_000) {
+    return `$${(n / 1_000_000).toFixed(n < 10_000_000 ? 2 : 1)}M`;
+  }
+  return `$${(n / 1_000_000_000).toFixed(2)}B`;
 }

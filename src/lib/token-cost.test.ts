@@ -203,5 +203,26 @@ describe("formatCostUsd", () => {
     expect(formatCostUsd(0)).toBe("$0");
     expect(formatCostUsd(0.005)).toBe("$0.0050");
     expect(formatCostUsd(1.23)).toBe("$1.23");
+    expect(formatCostUsd(2_500_000)).toBe("$2.50M");
+    expect(formatCostUsd(1_250_000_000)).toBe("$1.25B");
+  });
+});
+
+describe("scenario caps", () => {
+  test("rejects oversize output tokens", () => {
+    const parsed = parseCostScenario({
+      modelId: "gpt-5.4",
+      outputTokens: 50_000_000,
+    });
+    expect(parsed.ok).toBe(false);
+  });
+
+  test("calculateCost clamps absurd output", () => {
+    const result = calculateCost({
+      modelId: "claude-sonnet-5.5",
+      text: { mode: "tokens", tokens: 1_000 },
+      outputTokens: Number.MAX_SAFE_INTEGER,
+    });
+    expect(result.tokens.output).toBe(1_000_000);
   });
 });

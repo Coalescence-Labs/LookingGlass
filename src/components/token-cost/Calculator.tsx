@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, useEffectEvent } from "react";
 import {
   formatCostUsd,
   PRICING_SNAPSHOT,
+  SCENARIO_LIMITS,
   type CostResult,
   type CostScenario,
   type ImageSizeBand,
@@ -118,6 +119,7 @@ function NumberField({
   value,
   onChange,
   min = 0,
+  max,
   step = 1,
   suffix,
 }: {
@@ -125,6 +127,7 @@ function NumberField({
   value: number;
   onChange: (n: number) => void;
   min?: number;
+  max: number;
   step?: number;
   suffix?: string;
 }) {
@@ -135,11 +138,16 @@ function NumberField({
         type="number"
         inputMode="decimal"
         min={min}
+        max={max}
         step={step}
         value={Number.isFinite(value) ? value : 0}
         onChange={(e) => {
-          const n = e.target.valueAsNumber;
-          onChange(Number.isFinite(n) ? n : 0);
+          const raw = e.target.valueAsNumber;
+          if (!Number.isFinite(raw)) {
+            onChange(min);
+            return;
+          }
+          onChange(Math.min(max, Math.max(min, raw)));
         }}
         className={`${underlineField}${suffix ? " pr-10" : ""}`}
       />
@@ -270,12 +278,18 @@ export function Calculator() {
 
   function setText(mode: TextMode, value: number) {
     setActivePreset(null);
+    const capped =
+      mode === "words"
+        ? Math.min(value, SCENARIO_LIMITS.words)
+        : mode === "chars"
+          ? Math.min(value, SCENARIO_LIMITS.chars)
+          : Math.min(value, SCENARIO_LIMITS.tokens);
     const text: TextInput =
       mode === "words"
-        ? { mode: "words", words: value }
+        ? { mode: "words", words: capped }
         : mode === "chars"
-          ? { mode: "chars", chars: value }
-          : { mode: "tokens", tokens: value };
+          ? { mode: "chars", chars: capped }
+          : { mode: "tokens", tokens: capped };
     setScenario((s) => ({ ...s, text }));
   }
 
@@ -394,6 +408,13 @@ export function Calculator() {
                   id={`${uid}-text`}
                   value={textValue}
                   onChange={(n) => setText(textMode, n)}
+                  max={
+                    textMode === "tokens"
+                      ? SCENARIO_LIMITS.tokens
+                      : textMode === "words"
+                        ? SCENARIO_LIMITS.words
+                        : SCENARIO_LIMITS.chars
+                  }
                   step={textMode === "tokens" ? 100 : 50}
                 />
                 <div className="mt-3">
@@ -415,6 +436,7 @@ export function Calculator() {
                   id={`${uid}-out`}
                   value={scenario.outputTokens}
                   onChange={(outputTokens) => patch({ outputTokens })}
+                  max={SCENARIO_LIMITS.outputTokens}
                   step={50}
                   suffix="tok"
                 />
@@ -429,13 +451,9 @@ export function Calculator() {
                   id={`${uid}-cache`}
                   value={scenario.cacheHitPercent ?? 0}
                   onChange={(cacheHitPercent) =>
-                    patch({
-                      cacheHitPercent: Math.min(
-                        100,
-                        Math.max(0, cacheHitPercent),
-                      ),
-                    })
+                    patch({ cacheHitPercent })
                   }
+                  max={SCENARIO_LIMITS.cacheHitPercent}
                   step={5}
                   suffix="%"
                 />
@@ -466,6 +484,7 @@ export function Calculator() {
                           },
                         })
                       }
+                      max={SCENARIO_LIMITS.images}
                     />
                     <div className="mt-3">
                       <Segmented
@@ -494,6 +513,7 @@ export function Calculator() {
                       id={`${uid}-audio`}
                       value={scenario.audioSeconds ?? 0}
                       onChange={(audioSeconds) => patch({ audioSeconds })}
+                      max={SCENARIO_LIMITS.audioSeconds}
                       step={5}
                       suffix="sec"
                     />
@@ -510,6 +530,7 @@ export function Calculator() {
                           },
                         })
                       }
+                      max={SCENARIO_LIMITS.videoSeconds}
                       step={5}
                       suffix="sec"
                     />
@@ -552,6 +573,7 @@ export function Calculator() {
                       id={`${uid}-rpd`}
                       value={scenario.requestsPerDay ?? 0}
                       onChange={(requestsPerDay) => patch({ requestsPerDay })}
+                      max={SCENARIO_LIMITS.requestsPerDay}
                       step={10}
                     />
                   </Field>
@@ -559,10 +581,9 @@ export function Calculator() {
                     <NumberField
                       id={`${uid}-users`}
                       value={scenario.users ?? 1}
-                      onChange={(users) =>
-                        patch({ users: Math.max(1, users) })
-                      }
+                      onChange={(users) => patch({ users })}
                       min={1}
+                      max={SCENARIO_LIMITS.users}
                     />
                   </Field>
                 </div>
@@ -590,8 +611,8 @@ export function Calculator() {
 
             {result ? (
               <>
-                <div className="mt-6">
-                  <span className="type-numeral text-[3rem] leading-none text-bone md:text-[3.5rem]">
+                <div className="mt-6 min-w-0">
+                  <span className="type-numeral block truncate text-[3rem] leading-none text-bone md:text-[3.5rem]">
                     {formatCostUsd(result.costs.perRequestUsd)}
                   </span>
                   <div className="mt-3 font-serif text-[1.15rem] text-bone-2">
@@ -640,8 +661,8 @@ export function Calculator() {
                 {result.monthly ? (
                   <div className="mt-auto border-t border-line pt-8">
                     <span className="type-mono-sm">Thirty-day estimate</span>
-                    <div className="mt-3">
-                      <span className="type-numeral text-[2.25rem] leading-none text-accent md:text-[2.75rem]">
+                    <div className="mt-3 min-w-0">
+                      <span className="type-numeral block truncate text-[2.25rem] leading-none text-accent md:text-[2.75rem]">
                         {formatCostUsd(result.monthly.usd)}
                       </span>
                     </div>
