@@ -253,10 +253,12 @@ export function StageTimeline({ activeStageId }: Props) {
         </div>
 
         <p className="type-mono-sm text-bone-3 max-w-2xl">
-          At 4.6 billion years we sit mid–main-sequence: roughly half the working
-          life already behind, ~5 billion years ahead before the red-giant turn.
-          Four-fifths of the sun&rsquo;s luminous career is this long middle; after
-          turnoff, everything fits in a sliver you can barely see.
+          At 4.6 billion years we sit mid–main-sequence: a little under half the
+          working life already behind, ~5 billion years ahead before the
+          red-giant turn. Nearly all of the sun&rsquo;s hydrogen-burning career
+          is this long middle; after turnoff, the luminous giant phases fit in a
+          sliver you can barely see (the white-dwarf cooling that follows is
+          longer still, but no longer shining by fusion).
         </p>
       </div>
     </div>

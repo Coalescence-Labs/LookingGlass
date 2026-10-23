@@ -43,7 +43,8 @@ export default function SolarLifeCyclePage() {
                   ~10-billion-year
                 </span>{" "}
                 main-sequence life. After that, a short and spectacular old age,
-                then a hundred-billion-year cooling.
+                then a cooling that lasts hundreds of billions of years (and
+                longer in detailed white-dwarf models).
               </p>
             </div>
             <div className="flex flex-col gap-6">
@@ -177,17 +178,20 @@ export default function SolarLifeCyclePage() {
             <div className="flex flex-col gap-6 type-body max-w-xl">
               <p>
                 The most common picture of Earth&rsquo;s end involves the sun
-                swelling red and swallowing us whole during the red giant
-                branch. That is technically possible — the AGB radius does
-                reach past the current orbit — but it misses the more
-                immediate problem.
+                swelling red and swallowing us whole. Mercury is engulfed on
+                the red-giant tip in standard solar tracks; Earth&rsquo;s fate
+                on the asymptotic giant branch is model-dependent — tip radii
+                reach near today&rsquo;s 1&nbsp;AU, but mass loss widens orbits
+                and tides can still pull planets in. That debate misses the
+                more immediate problem.
               </p>
               <p>
-                The sun brightens as it ages. Over the main sequence,
-                luminosity climbs roughly 30% from zero-age to turnoff. Climate
-                models that couple increasing solar flux to atmospheric
-                chemistry put the loss of Earth&rsquo;s liquid water somewhere
-                between{" "}
+                The sun brightens as it ages. From zero-age to turnoff,
+                luminosity rises from roughly 0.7&nbsp;L☉ to about
+                2&nbsp;L☉ — roughly a factor of three, not a few tens of
+                percent. Relative to today, climate models that couple
+                increasing solar flux to atmospheric chemistry put the loss of
+                Earth&rsquo;s liquid water somewhere between{" "}
                 <span className="text-bone">a few hundred million</span> and{" "}
                 <span className="text-bone">about a billion</span> years from
                 now — long after anything resembling the current biosphere,
@@ -244,23 +248,31 @@ export default function SolarLifeCyclePage() {
         <Reveal>
           <div className="flex items-end justify-between border-b border-line pb-6">
             <h2 className="type-mono">Sources & notes</h2>
-            <span className="type-mono-sm">Verified April 2026</span>
+            <span className="type-mono-sm">Verified October 2026</span>
           </div>
         </Reveal>
 
         <Reveal delay={0.08}>
           <ul className="mt-8 flex flex-col gap-5 type-body max-w-3xl">
             <li>
-              Sun&rsquo;s current age (4.6 billion years), radius,
-              luminosity, and hydrostatic properties are drawn from the{" "}
+              Present-day Teff (5772&nbsp;K), luminosity, and central temperature
+              come from the{" "}
               <SourceOutboundLink
                 href={SOURCES.nasa.href}
                 className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
               >
                 NASA Sun Fact Sheet
               </SourceOutboundLink>
-              . Main-sequence duration and fraction elapsed are consistent with
-              that source&rsquo;s wording.
+              . Age (~4.6&nbsp;Gyr) and the public ~10&nbsp;Gyr main-sequence
+              lifetime / ~5&nbsp;Gyr remaining wording follow{" "}
+              <SourceOutboundLink
+                href={SOURCES.nasaFacts.href}
+                className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
+              >
+                NASA Science Sun facts
+              </SourceOutboundLink>
+              ; detailed 1&nbsp;M☉ tracks often give ~10–11&nbsp;Gyr on the main
+              sequence.
             </li>
             <li>
               Phase-by-phase physics (core degeneracy, shell burning, dredge-up,
@@ -269,14 +281,29 @@ export default function SolarLifeCyclePage() {
                 href={SOURCES.cd.href}
                 className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
               >
-                Christensen-Dalsgaard&rsquo;s <em>Stellar Structure and Evolution</em>
+                Christensen-Dalsgaard&rsquo;s <em>Lecture Notes on Stellar
+                Structure and Evolution</em>
               </SourceOutboundLink>{" "}
-              lecture notes (Aarhus, 2008), chapters 10–12. Specific sections
-              are cited on each stage card.
+              (Aarhus; linked via a Wayback snapshot of the 2023 PDF — the live
+              Aarhus path has moved). Specific sections are cited on each stage
+              card.
             </li>
             <li>
-              RGB, helium flash, HB, and AGB descriptions are cross-referenced
-              with Iben&rsquo;s{" "}
+              Quantitative solar-track waypoints (ZAMS→turnoff L/R, RGB tip,
+              AGB tip near 1&nbsp;AU, HB/AGB durations, remnant mass) are
+              anchored to{" "}
+              <SourceOutboundLink
+                href={SOURCES.sackmann.href}
+                className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
+              >
+                Sackmann, Boothroyd &amp; Kraemer (1993)
+              </SourceOutboundLink>
+              . Numbers are rounded for the explainer; they are
+              model-dependent.
+            </li>
+            <li>
+              RGB, helium flash, HB, and AGB qualitative structure are
+              cross-referenced with Iben&rsquo;s{" "}
               <SourceOutboundLink
                 href={SOURCES.iben.href}
                 className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
@@ -287,30 +314,32 @@ export default function SolarLifeCyclePage() {
               subsumed by this treatment.
             </li>
             <li>
-              Post-main-sequence track timing proxies values from NASA +
-              Christensen-Dalsgaard rather than reading{" "}
+              Grid context for 1&nbsp;M☉ evolution also includes{" "}
               <SourceOutboundLink
                 href={SOURCES.schaller.href}
                 className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
               >
                 Schaller et al. (1992)
-              </SourceOutboundLink>{" "}
-              tables directly. Cells in the data layer where interpolation was
-              unavoidable are flagged as such.
+              </SourceOutboundLink>
+              ; this page&rsquo;s timing cells follow Sackmann + NASA rather
+              than reading every Schaller table cell.
             </li>
             <li>
               Earth habitability framing (§ III) is intentionally
               order-of-magnitude: specific million-year figures depend on
               climate coupling assumptions that remain under active
-              discussion. The
-              direction and rough scale are robust; pinpoint values are not.
+              discussion. The direction and rough scale are robust; pinpoint
+              values are not. Engulfment of Earth is likewise unsettled once
+              tides and AGB mass loss are included.
             </li>
             <li>
               HR path shown in § II is a simplified single-star trace. AGB
               thermal-pulse wiggles and &ldquo;born-again&rdquo; loops are
               omitted for legibility. The convention — temperature decreasing
               left-to-right, luminosity log-scaled — is the one Hertzsprung
-              and Russell independently arrived at in 1911 and 1913.
+              and Russell independently arrived at in 1911 and 1913. White-dwarf
+              cooling on the timeline uses a 10¹¹&nbsp;yr schematic span;
+              cooling models continue longer.
             </li>
           </ul>
         </Reveal>
