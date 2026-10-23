@@ -418,7 +418,7 @@ export function parseCostScenario(
     return { ok: false, error: `Unknown modelId: ${b.modelId}` };
   }
 
-  const outputTokens = asNonNegNumber(b.outputTokens, "outputTokens");
+  const outputTokens = asNonNegNumber(b.outputTokens);
   if (outputTokens == null) {
     return { ok: false, error: "outputTokens must be a non-negative number." };
   }
@@ -439,7 +439,7 @@ export function parseCostScenario(
       return { ok: false, error: "images must be an object." };
     }
     const img = b.images as Record<string, unknown>;
-    const count = asNonNegNumber(img.count, "images.count");
+    const count = asNonNegNumber(img.count);
     if (count == null) {
       return { ok: false, error: "images.count must be a non-negative number." };
     }
@@ -454,7 +454,7 @@ export function parseCostScenario(
   }
 
   if (b.audioSeconds != null) {
-    const audio = asNonNegNumber(b.audioSeconds, "audioSeconds");
+    const audio = asNonNegNumber(b.audioSeconds);
     if (audio == null) {
       return { ok: false, error: "audioSeconds must be a non-negative number." };
     }
@@ -466,7 +466,7 @@ export function parseCostScenario(
       return { ok: false, error: "video must be an object." };
     }
     const v = b.video as Record<string, unknown>;
-    const seconds = asNonNegNumber(v.seconds, "video.seconds");
+    const seconds = asNonNegNumber(v.seconds);
     if (seconds == null) {
       return {
         ok: false,
@@ -484,7 +484,7 @@ export function parseCostScenario(
   }
 
   if (b.cacheHitPercent != null) {
-    const pct = asNonNegNumber(b.cacheHitPercent, "cacheHitPercent");
+    const pct = asNonNegNumber(b.cacheHitPercent);
     if (pct == null || pct > 100) {
       return {
         ok: false,
@@ -495,7 +495,7 @@ export function parseCostScenario(
   }
 
   if (b.requestsPerDay != null) {
-    const r = asNonNegNumber(b.requestsPerDay, "requestsPerDay");
+    const r = asNonNegNumber(b.requestsPerDay);
     if (r == null) {
       return {
         ok: false,
@@ -506,7 +506,7 @@ export function parseCostScenario(
   }
 
   if (b.users != null) {
-    const u = asNonNegNumber(b.users, "users");
+    const u = asNonNegNumber(b.users);
     if (u == null || u < 1) {
       return { ok: false, error: "users must be a number ≥ 1." };
     }
@@ -526,21 +526,21 @@ function parseTextInput(
   }
   const t = raw as Record<string, unknown>;
   if (t.mode === "tokens") {
-    const tokens = asNonNegNumber(t.tokens, "text.tokens");
+    const tokens = asNonNegNumber(t.tokens);
     if (tokens == null) {
       return { ok: false, error: "text.tokens must be a non-negative number." };
     }
     return { ok: true, value: { mode: "tokens", tokens } };
   }
   if (t.mode === "words") {
-    const words = asNonNegNumber(t.words, "text.words");
+    const words = asNonNegNumber(t.words);
     if (words == null) {
       return { ok: false, error: "text.words must be a non-negative number." };
     }
     return { ok: true, value: { mode: "words", words } };
   }
   if (t.mode === "chars") {
-    const chars = asNonNegNumber(t.chars, "text.chars");
+    const chars = asNonNegNumber(t.chars);
     if (chars == null) {
       return { ok: false, error: "text.chars must be a non-negative number." };
     }
@@ -552,7 +552,7 @@ function parseTextInput(
   };
 }
 
-function asNonNegNumber(v: unknown, _label: string): number | null {
+function asNonNegNumber(v: unknown): number | null {
   if (typeof v !== "number" || !Number.isFinite(v) || v < 0) return null;
   return v;
 }

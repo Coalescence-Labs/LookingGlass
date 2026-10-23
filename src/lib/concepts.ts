@@ -111,6 +111,17 @@ export const concepts: Concept[] = [
     status: "live",
     readingTime: "9 min",
   },
+  {
+    index: "08",
+    slug: "token-cost",
+    title: "What does a token actually cost?",
+    subtitle:
+      "Input, cache hits, and output price differently — work a real request shape into dollars per call and per month.",
+    kicker: "On cost",
+    seriesId: "language-models",
+    status: "live",
+    readingTime: "6 min",
+  },
 ];
 
 export function getConcept(slug: string) {
