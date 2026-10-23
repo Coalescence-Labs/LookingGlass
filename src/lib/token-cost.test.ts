@@ -60,7 +60,7 @@ describe("textToTokens", () => {
 describe("modalityTokens", () => {
   test("sums text, images, audio, video", () => {
     const t = modalityTokens({
-      modelId: "claude-sonnet-4.6",
+      modelId: "claude-sonnet-5.5",
       text: { mode: "tokens", tokens: 1_000 },
       images: { count: 2, size: "medium" },
       audioSeconds: 10,
@@ -99,32 +99,32 @@ describe("usdForTokens", () => {
 describe("calculateCost", () => {
   test("simple text + output with no cache", () => {
     const result = calculateCost({
-      modelId: "claude-sonnet-4.6",
+      modelId: "claude-sonnet-5.5",
       text: { mode: "tokens", tokens: 1_000_000 },
       outputTokens: 1_000_000,
       cacheHitPercent: 0,
     });
-    // $3 input + $15 output
-    expect(result.costs.uncachedInputUsd).toBeCloseTo(3, 6);
+    // $2 input + $10 output
+    expect(result.costs.uncachedInputUsd).toBeCloseTo(2, 6);
     expect(result.costs.cachedInputUsd).toBeCloseTo(0, 6);
-    expect(result.costs.outputUsd).toBeCloseTo(15, 6);
-    expect(result.costs.perRequestUsd).toBeCloseTo(18, 6);
+    expect(result.costs.outputUsd).toBeCloseTo(10, 6);
+    expect(result.costs.perRequestUsd).toBeCloseTo(12, 6);
     expect(result.verifiedDate).toBe(PRICING_SNAPSHOT.verifiedDate);
   });
 
   test("cache hit percent splits text only", () => {
     const result = calculateCost({
-      modelId: "claude-opus-4.7",
+      modelId: "claude-opus-5.5",
       text: { mode: "tokens", tokens: 1_000_000 },
       images: { count: 0, size: "small" },
       outputTokens: 0,
       cacheHitPercent: 80,
     });
-    // 800k @ $0.50 + 200k @ $5
+    // 800k @ $0.20 + 200k @ $4
     expect(result.tokens.cachedText).toBeCloseTo(800_000, 6);
     expect(result.tokens.uncachedText).toBeCloseTo(200_000, 6);
-    expect(result.costs.cachedInputUsd).toBeCloseTo(0.4, 6);
-    expect(result.costs.uncachedInputUsd).toBeCloseTo(1, 6);
+    expect(result.costs.cachedInputUsd).toBeCloseTo(0.16, 6);
+    expect(result.costs.uncachedInputUsd).toBeCloseTo(0.8, 6);
   });
 
   test("model without cache rate falls back to input price", () => {
@@ -145,7 +145,7 @@ describe("calculateCost", () => {
 
   test("monthly scale", () => {
     const result = calculateCost({
-      modelId: "claude-haiku-4.5",
+      modelId: "claude-haiku-5.5",
       text: { mode: "tokens", tokens: 1_000 },
       outputTokens: 500,
       requestsPerDay: 100,

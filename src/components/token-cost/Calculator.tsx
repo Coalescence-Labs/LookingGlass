@@ -11,12 +11,13 @@ import {
   type VideoFormatBand,
 } from "@/lib/token-cost";
 import { formatTokens } from "@/lib/tokens";
+import { ModelPicker } from "./ModelPicker";
 import { PRESETS } from "./presets";
 
 type TextMode = TextInput["mode"];
 
 const DEFAULT: CostScenario = {
-  modelId: "claude-sonnet-4.6",
+  modelId: "claude-sonnet-5.5",
   text: { mode: "tokens", tokens: 4_000 },
   images: { count: 0, size: "medium" },
   audioSeconds: 0,
@@ -27,15 +28,26 @@ const DEFAULT: CostScenario = {
   users: 1,
 };
 
+const fieldClass =
+  "w-full bg-ink-3 border border-line px-3 py-2 type-mono text-bone text-[0.8rem] outline-none transition-colors hover:border-line-2 focus:border-accent";
+
+/** Hover/focus tooltip — visible panel, not the browser title chrome. */
 function Hint({ label }: { label: string }) {
   return (
-    <span
-      className="ml-1 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border border-line-2 type-mono text-[0.55rem] text-muted cursor-help align-middle"
-      title={label}
-      aria-label={label}
-      tabIndex={0}
-    >
-      ?
+    <span className="group/hint relative ml-1.5 inline-flex align-middle">
+      <span
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-line-2 type-mono text-[0.55rem] text-muted transition-colors group-hover/hint:border-accent group-hover/hint:text-accent group-focus-within/hint:border-accent group-focus-within/hint:text-accent cursor-help"
+        tabIndex={0}
+        aria-label={label}
+      >
+        ?
+      </span>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-1/2 top-[calc(100%+0.4rem)] z-30 w-56 -translate-x-1/2 border border-line-2 bg-ink-2 px-2.5 py-2 text-left font-sans text-[0.72rem] font-normal normal-case tracking-normal text-bone-2 leading-snug opacity-0 shadow-[0_12px_28px_rgba(0,0,0,0.4)] transition-opacity duration-150 group-hover/hint:opacity-100 group-focus-within/hint:opacity-100"
+      >
+        {label}
+      </span>
     </span>
   );
 }
@@ -45,14 +57,22 @@ function FieldLabel({
   children,
   hint,
 }: {
-  htmlFor: string;
+  htmlFor?: string;
   children: React.ReactNode;
   hint?: string;
 }) {
-  return (
-    <label htmlFor={htmlFor} className="flex items-center gap-0.5">
+  const inner = (
+    <>
       <span className="type-mono-sm text-bone-3">{children}</span>
       {hint ? <Hint label={hint} /> : null}
+    </>
+  );
+  if (!htmlFor) {
+    return <div className="mb-1.5 flex items-center">{inner}</div>;
+  }
+  return (
+    <label htmlFor={htmlFor} className="mb-1.5 flex items-center">
+      {inner}
     </label>
   );
 }
@@ -85,7 +105,7 @@ function NumberInput({
         const n = e.target.valueAsNumber;
         onChange(Number.isFinite(n) ? n : 0);
       }}
-      className="w-full bg-ink-3 border border-line px-2.5 py-1.5 type-mono text-bone text-[0.8rem] outline-none focus:border-accent transition-colors"
+      className={fieldClass}
     />
   );
 }
@@ -104,19 +124,27 @@ function SelectInput<T extends string>({
   "aria-label"?: string;
 }) {
   return (
-    <select
-      id={id}
-      value={value}
-      aria-label={ariaLabel}
-      onChange={(e) => onChange(e.target.value as T)}
-      className="w-full bg-ink-3 border border-line px-2.5 py-1.5 type-mono text-bone text-[0.8rem] outline-none focus:border-accent transition-colors"
-    >
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    <div className="relative">
+      <select
+        id={id}
+        value={value}
+        aria-label={ariaLabel}
+        onChange={(e) => onChange(e.target.value as T)}
+        className={`${fieldClass} appearance-none pr-8`}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <span
+        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 type-mono-sm text-dim"
+        aria-hidden
+      >
+        ▾
+      </span>
+    </div>
   );
 }
 
@@ -138,28 +166,38 @@ function Collapse({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-t border-line">
+    <div>
       <button
         type="button"
         id={id}
         aria-expanded={open}
         aria-controls={`${id}-panel`}
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-3 py-2 text-left"
+        className="group flex w-full items-center justify-between gap-3 border border-transparent px-1 py-2.5 text-left transition-colors hover:border-line hover:bg-glass"
       >
-        <span className="flex items-center gap-1.5">
-          <span className="type-mono-sm text-bone">{title}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="type-mono-sm text-bone transition-colors group-hover:text-accent">
+            {title}
+          </span>
           {hint ? <Hint label={hint} /> : null}
           {!open && summary ? (
             <span className="type-mono-sm text-dim truncate">{summary}</span>
           ) : null}
         </span>
-        <span className="type-mono-sm text-dim" aria-hidden>
+        <span
+          className="type-mono-sm text-dim transition-colors group-hover:text-accent"
+          aria-hidden
+        >
           {open ? "−" : "+"}
         </span>
       </button>
       {open ? (
-        <div id={`${id}-panel`} role="region" aria-labelledby={id} className="pb-2">
+        <div
+          id={`${id}-panel`}
+          role="region"
+          aria-labelledby={id}
+          className="pb-1 pt-1"
+        >
           {children}
         </div>
       ) : null}
@@ -268,8 +306,6 @@ export function Calculator() {
     year: "numeric",
   });
 
-  const selected = PRICING_SNAPSHOT.models.find((m) => m.id === scenario.modelId);
-
   const modsSummary = (() => {
     const parts: string[] = [];
     if ((scenario.images?.count ?? 0) > 0) {
@@ -281,88 +317,83 @@ export function Calculator() {
     if ((scenario.video?.seconds ?? 0) > 0) {
       parts.push(`${scenario.video!.seconds}s video`);
     }
-    return parts.length ? parts.join(" · ") : "none";
+    return parts.length ? parts.join(" · ") : "off";
   })();
 
-  const scaleSummary = `${scenario.requestsPerDay ?? 0}/day · ${scenario.users ?? 1} user${(scenario.users ?? 1) === 1 ? "" : "s"}`;
+  const scaleSummary = `${scenario.requestsPerDay ?? 0}/day · ${scenario.users ?? 1}u`;
 
   return (
     <div
       className="flex max-h-[100dvh] flex-col border border-line overflow-hidden"
       style={{ background: "rgba(15,15,18,0.55)" }}
     >
-      {/* Header + presets */}
-      <div className="shrink-0 border-b border-line px-4 py-2.5 md:px-5">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+      {/* Identity strip */}
+      <div className="shrink-0 border-b border-line px-5 py-3.5 md:px-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <span className="flex items-center type-mono-sm text-bone">
             Token cost calculator
             <Hint label="Authoritative math runs on Looking Glass — change inputs and the backend recomputes." />
           </span>
           <p className="type-mono-sm text-dim">Verified {verifiedHuman}</p>
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+      </div>
+
+      {/* Presets — their own band */}
+      <div className="shrink-0 border-b border-line px-5 py-3.5 md:px-6">
+        <div className="mb-2.5 type-mono-sm text-dim">App-shaped presets</div>
+        <div className="flex flex-wrap gap-2">
           {PRESETS.map((p) => {
             const on = activePreset === p.id;
             return (
               <button
                 key={p.id}
                 type="button"
-                title={p.blurb}
                 onClick={() => applyPreset(p.id)}
                 aria-pressed={on}
-                className={`type-mono-sm px-2.5 py-1 border transition-colors ${
+                className={`group/preset relative type-mono-sm px-3 py-1.5 border transition-colors ${
                   on
                     ? "border-accent text-accent bg-accent-soft"
-                    : "border-line text-bone-3 hover:border-line-2 hover:text-bone"
+                    : "border-line text-bone-3 hover:border-line-2 hover:text-bone hover:bg-glass"
                 }`}
               >
                 {p.label}
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute left-0 top-[calc(100%+0.45rem)] z-30 w-56 border border-line-2 bg-ink-2 px-2.5 py-2 text-left font-sans text-[0.72rem] font-normal normal-case tracking-normal text-bone-2 leading-snug opacity-0 shadow-[0_12px_28px_rgba(0,0,0,0.4)] transition-opacity duration-150 group-hover/preset:opacity-100"
+                >
+                  {p.blurb}
+                </span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 md:grid-cols-[1.15fr_0.85fr]">
+      <div className="grid min-h-0 flex-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)]">
         {/* Controls */}
-        <div className="min-h-0 overflow-y-auto border-b border-line px-4 py-3 md:border-b-0 md:border-r md:px-5">
-          <div className="grid gap-2.5 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <FieldLabel
-                htmlFor={`${uid}-model`}
-                hint={
-                  selected
-                    ? `Input $${selected.priceInput}${
-                        selected.priceCachedInput != null
-                          ? ` · cached $${selected.priceCachedInput}`
-                          : " · no cache rate"
-                      } · output $${selected.priceOutput} / 1M tokens`
-                    : undefined
-                }
-              >
-                Model
-              </FieldLabel>
-              <div className="mt-1">
-                <SelectInput
-                  id={`${uid}-model`}
-                  value={scenario.modelId}
-                  onChange={(modelId) => patch({ modelId })}
-                  options={PRICING_SNAPSHOT.models.map((m) => ({
-                    value: m.id,
-                    label: `${m.name} · $${m.priceInput}/$${m.priceOutput}`,
-                  }))}
-                />
-              </div>
-            </div>
+        <div className="min-h-0 overflow-y-auto border-b border-line px-5 py-5 md:border-b-0 md:border-r md:px-6 md:py-6">
+          {/* Model — primary control */}
+          <div className="mb-6">
+            <FieldLabel hint="Rates are USD per 1M tokens (pay-as-you-go). Cache is the hit/read rate.">
+              Model
+            </FieldLabel>
+            <ModelPicker
+              value={scenario.modelId}
+              onChange={(modelId) => patch({ modelId })}
+            />
+          </div>
 
-            <div>
-              <FieldLabel
-                htmlFor={`${uid}-text-mode`}
-                hint="Words ≈ 0.75 words/token · chars ≈ 4 chars/token (English estimate)."
-              >
-                Text as
-              </FieldLabel>
-              <div className="mt-1">
+          {/* Core token budget */}
+          <div className="mb-2">
+            <div className="mb-3 type-mono-sm text-dim">Request shape</div>
+            <div className="grid gap-x-4 gap-y-3.5 sm:grid-cols-2">
+              <div>
+                <FieldLabel
+                  htmlFor={`${uid}-text-mode`}
+                  hint="Words ≈ 0.75 words/token · chars ≈ 4 chars/token (English estimate)."
+                >
+                  Text as
+                </FieldLabel>
                 <SelectInput
                   id={`${uid}-text-mode`}
                   value={textMode}
@@ -374,16 +405,14 @@ export function Calculator() {
                   ]}
                 />
               </div>
-            </div>
-            <div>
-              <FieldLabel htmlFor={`${uid}-text-val`}>
-                {textMode === "tokens"
-                  ? "Input tokens"
-                  : textMode === "words"
-                    ? "Words"
-                    : "Characters"}
-              </FieldLabel>
-              <div className="mt-1">
+              <div>
+                <FieldLabel htmlFor={`${uid}-text-val`}>
+                  {textMode === "tokens"
+                    ? "Input tokens"
+                    : textMode === "words"
+                      ? "Words"
+                      : "Characters"}
+                </FieldLabel>
                 <NumberInput
                   id={`${uid}-text-val`}
                   value={textValue}
@@ -391,16 +420,13 @@ export function Calculator() {
                   step={textMode === "tokens" ? 100 : 50}
                 />
               </div>
-            </div>
-
-            <div>
-              <FieldLabel
-                htmlFor={`${uid}-cache`}
-                hint="Share of text tokens billed at the cache-hit rate."
-              >
-                Cache hit %
-              </FieldLabel>
-              <div className="mt-1">
+              <div>
+                <FieldLabel
+                  htmlFor={`${uid}-cache`}
+                  hint="Share of text tokens billed at the cache-hit rate."
+                >
+                  Cache hit %
+                </FieldLabel>
                 <NumberInput
                   id={`${uid}-cache`}
                   value={scenario.cacheHitPercent ?? 0}
@@ -412,10 +438,8 @@ export function Calculator() {
                   step={5}
                 />
               </div>
-            </div>
-            <div>
-              <FieldLabel htmlFor={`${uid}-out`}>Output tokens</FieldLabel>
-              <div className="mt-1">
+              <div>
+                <FieldLabel htmlFor={`${uid}-out`}>Output tokens</FieldLabel>
                 <NumberInput
                   id={`${uid}-out`}
                   value={scenario.outputTokens}
@@ -426,155 +450,141 @@ export function Calculator() {
             </div>
           </div>
 
-          <div className="mt-2">
-            <Collapse
-              id={`${uid}-mods`}
-              title="Modalities"
-              hint="Image, audio, and video token counts are published approximations — not a tokenizer substitute."
-              open={modsOpen}
-              onToggle={() => setModsOpen((o) => !o)}
-              summary={modsSummary}
-            >
-              <div className="grid gap-2.5 sm:grid-cols-2">
-                <div>
-                  <FieldLabel htmlFor={`${uid}-img-n`}>Images</FieldLabel>
-                  <div className="mt-1">
-                    <NumberInput
-                      id={`${uid}-img-n`}
-                      value={scenario.images?.count ?? 0}
-                      onChange={(count) =>
-                        patch({
-                          images: {
-                            count,
-                            size: scenario.images?.size ?? "medium",
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel htmlFor={`${uid}-img-sz`}>Image size</FieldLabel>
-                  <div className="mt-1">
-                    <SelectInput
-                      id={`${uid}-img-sz`}
-                      value={(scenario.images?.size ?? "medium") as ImageSizeBand}
-                      onChange={(size) =>
-                        patch({
-                          images: {
-                            count: scenario.images?.count ?? 0,
-                            size,
-                          },
-                        })
-                      }
-                      options={[
-                        { value: "small", label: "Small (~500)" },
-                        { value: "medium", label: "Medium (~1.1k)" },
-                        { value: "large", label: "Large (~2.5k)" },
-                      ]}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel htmlFor={`${uid}-audio`}>Audio (sec)</FieldLabel>
-                  <div className="mt-1">
-                    <NumberInput
-                      id={`${uid}-audio`}
-                      value={scenario.audioSeconds ?? 0}
-                      onChange={(audioSeconds) => patch({ audioSeconds })}
-                      step={5}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel htmlFor={`${uid}-video`}>Video (sec)</FieldLabel>
-                  <div className="mt-1">
-                    <NumberInput
-                      id={`${uid}-video`}
-                      value={scenario.video?.seconds ?? 0}
-                      onChange={(seconds) =>
-                        patch({
-                          video: {
-                            seconds,
-                            format: scenario.video?.format ?? "default",
-                          },
-                        })
-                      }
-                      step={5}
-                    />
-                  </div>
-                </div>
-                <div className="sm:col-span-2">
-                  <FieldLabel
-                    htmlFor={`${uid}-vfmt`}
-                    hint="Scales the base ~258 tokens/sec video rate."
-                  >
-                    Video format
-                  </FieldLabel>
-                  <div className="mt-1">
-                    <SelectInput
-                      id={`${uid}-vfmt`}
-                      value={
-                        (scenario.video?.format ?? "default") as VideoFormatBand
-                      }
-                      onChange={(format) =>
-                        patch({
-                          video: {
-                            seconds: scenario.video?.seconds ?? 0,
-                            format,
-                          },
-                        })
-                      }
-                      options={[
-                        { value: "low", label: "Low (0.5×)" },
-                        { value: "default", label: "Default (1×)" },
-                        { value: "high", label: "High (1.5×)" },
-                      ]}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Collapse>
+          <div className="my-4 rule" />
 
-            <Collapse
-              id={`${uid}-scale`}
-              title="Monthly scale"
-              hint="requests/day × users × 30."
-              open={scaleOpen}
-              onToggle={() => setScaleOpen((o) => !o)}
-              summary={scaleSummary}
-            >
-              <div className="grid gap-2.5 sm:grid-cols-2">
-                <div>
-                  <FieldLabel htmlFor={`${uid}-rpd`}>Requests / day</FieldLabel>
-                  <div className="mt-1">
-                    <NumberInput
-                      id={`${uid}-rpd`}
-                      value={scenario.requestsPerDay ?? 0}
-                      onChange={(requestsPerDay) => patch({ requestsPerDay })}
-                      step={10}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel htmlFor={`${uid}-users`}>Users</FieldLabel>
-                  <div className="mt-1">
-                    <NumberInput
-                      id={`${uid}-users`}
-                      value={scenario.users ?? 1}
-                      onChange={(users) => patch({ users: Math.max(1, users) })}
-                      min={1}
-                    />
-                  </div>
-                </div>
+          <Collapse
+            id={`${uid}-mods`}
+            title="Modalities"
+            hint="Image, audio, and video token counts are published approximations — not a tokenizer substitute."
+            open={modsOpen}
+            onToggle={() => setModsOpen((o) => !o)}
+            summary={modsSummary}
+          >
+            <div className="grid gap-x-4 gap-y-3.5 sm:grid-cols-2">
+              <div>
+                <FieldLabel htmlFor={`${uid}-img-n`}>Images</FieldLabel>
+                <NumberInput
+                  id={`${uid}-img-n`}
+                  value={scenario.images?.count ?? 0}
+                  onChange={(count) =>
+                    patch({
+                      images: {
+                        count,
+                        size: scenario.images?.size ?? "medium",
+                      },
+                    })
+                  }
+                />
               </div>
-            </Collapse>
-          </div>
+              <div>
+                <FieldLabel htmlFor={`${uid}-img-sz`}>Image size</FieldLabel>
+                <SelectInput
+                  id={`${uid}-img-sz`}
+                  value={(scenario.images?.size ?? "medium") as ImageSizeBand}
+                  onChange={(size) =>
+                    patch({
+                      images: {
+                        count: scenario.images?.count ?? 0,
+                        size,
+                      },
+                    })
+                  }
+                  options={[
+                    { value: "small", label: "Small (~500)" },
+                    { value: "medium", label: "Medium (~1.1k)" },
+                    { value: "large", label: "Large (~2.5k)" },
+                  ]}
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor={`${uid}-audio`}>Audio (sec)</FieldLabel>
+                <NumberInput
+                  id={`${uid}-audio`}
+                  value={scenario.audioSeconds ?? 0}
+                  onChange={(audioSeconds) => patch({ audioSeconds })}
+                  step={5}
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor={`${uid}-video`}>Video (sec)</FieldLabel>
+                <NumberInput
+                  id={`${uid}-video`}
+                  value={scenario.video?.seconds ?? 0}
+                  onChange={(seconds) =>
+                    patch({
+                      video: {
+                        seconds,
+                        format: scenario.video?.format ?? "default",
+                      },
+                    })
+                  }
+                  step={5}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <FieldLabel
+                  htmlFor={`${uid}-vfmt`}
+                  hint="Scales the base ~258 tokens/sec video rate."
+                >
+                  Video format
+                </FieldLabel>
+                <SelectInput
+                  id={`${uid}-vfmt`}
+                  value={(scenario.video?.format ?? "default") as VideoFormatBand}
+                  onChange={(format) =>
+                    patch({
+                      video: {
+                        seconds: scenario.video?.seconds ?? 0,
+                        format,
+                      },
+                    })
+                  }
+                  options={[
+                    { value: "low", label: "Low (0.5×)" },
+                    { value: "default", label: "Default (1×)" },
+                    { value: "high", label: "High (1.5×)" },
+                  ]}
+                />
+              </div>
+            </div>
+          </Collapse>
+
+          <div className="my-1 rule" />
+
+          <Collapse
+            id={`${uid}-scale`}
+            title="Monthly scale"
+            hint="requests/day × users × 30."
+            open={scaleOpen}
+            onToggle={() => setScaleOpen((o) => !o)}
+            summary={scaleSummary}
+          >
+            <div className="grid gap-x-4 gap-y-3.5 sm:grid-cols-2">
+              <div>
+                <FieldLabel htmlFor={`${uid}-rpd`}>Requests / day</FieldLabel>
+                <NumberInput
+                  id={`${uid}-rpd`}
+                  value={scenario.requestsPerDay ?? 0}
+                  onChange={(requestsPerDay) => patch({ requestsPerDay })}
+                  step={10}
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor={`${uid}-users`}>Users</FieldLabel>
+                <NumberInput
+                  id={`${uid}-users`}
+                  value={scenario.users ?? 1}
+                  onChange={(users) => patch({ users: Math.max(1, users) })}
+                  min={1}
+                />
+              </div>
+            </div>
+          </Collapse>
         </div>
 
         {/* Results */}
         <div
-          className="flex min-h-0 flex-col gap-3 overflow-y-auto px-4 py-3 md:px-5"
+          className="flex min-h-0 flex-col gap-5 overflow-y-auto px-5 py-5 md:px-6 md:py-6"
           aria-live="polite"
         >
           <div className="flex items-baseline justify-between gap-3">
@@ -593,36 +603,36 @@ export function Calculator() {
           {result ? (
             <>
               <div>
-                <span className="type-numeral text-[2.25rem] leading-none text-bone md:text-[2.75rem]">
+                <span className="type-numeral text-[2.35rem] leading-none text-bone md:text-[2.85rem]">
                   {formatCostUsd(result.costs.perRequestUsd)}
                 </span>
-                <div className="mt-1 type-mono-sm text-bone-3">
+                <div className="mt-2 type-mono-sm text-bone-3">
                   {result.model.name}
                 </div>
               </div>
 
-              <dl className="flex flex-col gap-1.5 type-mono-sm">
+              <dl className="flex flex-col gap-2 type-mono-sm">
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted">Uncached in</dt>
-                  <dd className="text-bone">
+                  <dd className="text-bone tabular-nums">
                     {formatCostUsd(result.costs.uncachedInputUsd)}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted">Cached in</dt>
-                  <dd className="text-bone">
+                  <dd className="text-bone tabular-nums">
                     {formatCostUsd(result.costs.cachedInputUsd)}
                   </dd>
                 </div>
-                <div className="flex justify-between gap-4 border-b border-line pb-1.5">
+                <div className="flex justify-between gap-4 border-b border-line pb-2">
                   <dt className="text-muted">Output</dt>
-                  <dd className="text-bone">
+                  <dd className="text-bone tabular-nums">
                     {formatCostUsd(result.costs.outputUsd)}
                   </dd>
                 </div>
               </dl>
 
-              <p className="type-mono-sm text-muted">
+              <p className="type-mono-sm text-muted leading-relaxed">
                 Text {formatTokens(result.tokens.text)}
                 {result.tokens.cachedText > 0
                   ? ` · ${formatTokens(result.tokens.cachedText)} cached`
@@ -644,25 +654,23 @@ export function Calculator() {
               </p>
 
               {result.monthly ? (
-                <div className="border-t border-line pt-3">
+                <div className="mt-auto border-t border-line pt-5">
                   <span className="type-mono-sm">Monthly</span>
-                  <div className="mt-1">
-                    <span className="type-numeral text-[1.75rem] leading-none text-accent md:text-[2.1rem]">
+                  <div className="mt-2">
+                    <span className="type-numeral text-[1.85rem] leading-none text-accent md:text-[2.2rem]">
                       {formatCostUsd(result.monthly.usd)}
                     </span>
                   </div>
-                  <p className="mt-1 type-mono-sm text-dim">
+                  <p className="mt-2 type-mono-sm text-dim">
                     {result.monthly.requests.toLocaleString("en-US")} req · 30d
                   </p>
                 </div>
               ) : null}
 
               {result.notes.length > 0 ? (
-                <p
-                  className="type-mono-sm text-dim truncate"
-                  title={result.notes.join(" · ")}
-                >
-                  {result.notes.length} note{result.notes.length === 1 ? "" : "s"}
+                <p className="flex items-center type-mono-sm text-dim">
+                  {result.notes.length} note
+                  {result.notes.length === 1 ? "" : "s"}
                   <Hint label={result.notes.join("\n\n")} />
                 </p>
               ) : null}

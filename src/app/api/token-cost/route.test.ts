@@ -41,7 +41,7 @@ describe("POST /api/token-cost", () => {
 
   test("calculates a fixture scenario", async () => {
     const res = await postJson({
-      modelId: "claude-sonnet-4.6",
+      modelId: "claude-sonnet-5.5",
       text: { mode: "tokens", tokens: 1_000_000 },
       outputTokens: 1_000_000,
       cacheHitPercent: 0,
@@ -54,9 +54,9 @@ describe("POST /api/token-cost", () => {
       monthly: { requests: number; usd: number };
       verifiedDate: string;
     };
-    expect(data.costs.perRequestUsd).toBeCloseTo(18, 5);
+    expect(data.costs.perRequestUsd).toBeCloseTo(12, 5);
     expect(data.monthly.requests).toBe(30);
-    expect(data.monthly.usd).toBeCloseTo(540, 4);
+    expect(data.monthly.usd).toBeCloseTo(360, 4);
     expect(data.verifiedDate).toBe(PRICING_SNAPSHOT.verifiedDate);
   });
 });

@@ -121,12 +121,12 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
   verifiedDate: "2026-10-22",
   models: [
     {
-      id: "claude-opus-4.7",
-      name: "Claude Opus 4.7",
+      id: "claude-opus-5.5",
+      name: "Claude Opus 5.5",
       family: "anthropic",
-      priceInput: 5,
-      priceCachedInput: 0.5,
-      priceOutput: 25,
+      priceInput: 4,
+      priceCachedInput: 0.2,
+      priceOutput: 20,
       sources: [
         {
           label: "Claude API pricing",
@@ -139,12 +139,12 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "claude-sonnet-4.6",
-      name: "Claude Sonnet 4.6",
+      id: "claude-sonnet-5.5",
+      name: "Claude Sonnet 5.5",
       family: "anthropic",
-      priceInput: 3,
-      priceCachedInput: 0.3,
-      priceOutput: 15,
+      priceInput: 2,
+      priceCachedInput: 0.1,
+      priceOutput: 10,
       sources: [
         {
           label: "Claude API pricing",
@@ -153,12 +153,14 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "claude-haiku-4.5",
-      name: "Claude Haiku 4.5",
+      id: "claude-haiku-5.5",
+      name: "Claude Haiku 5.5",
       family: "anthropic",
-      priceInput: 1,
-      priceCachedInput: 0.1,
-      priceOutput: 5,
+      priceInput: 0.1,
+      priceCachedInput: 0.01,
+      priceOutput: 0.5,
+      priceNote:
+        "Haiku 5.5 ≤100K-prompt tier. Prompts over 100K tokens are $0.50 / $2.50.",
       sources: [
         {
           label: "Claude API pricing",
@@ -173,10 +175,11 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       priceInput: 2.5,
       priceCachedInput: 0.25,
       priceOutput: 15,
+      priceNote: "Standard window (<272K). Long-context rates are higher.",
       sources: [
         {
           label: "OpenAI API pricing",
-          url: "https://openai.com/api/pricing/",
+          url: "https://developers.openai.com/api/docs/pricing",
         },
       ],
     },
@@ -185,8 +188,9 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       name: "Gemini 2.5 Pro",
       family: "google",
       priceInput: 1.25,
-      priceCachedInput: 0.315,
+      priceCachedInput: 0.125,
       priceOutput: 10,
+      priceNote: "Paid tier, prompts ≤200K tokens.",
       sources: [
         {
           label: "Gemini API pricing",
@@ -199,7 +203,7 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       name: "Gemini 2.5 Flash",
       family: "google",
       priceInput: 0.3,
-      priceCachedInput: 0.075,
+      priceCachedInput: 0.03,
       priceOutput: 2.5,
       sources: [
         {

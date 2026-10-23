@@ -15,7 +15,7 @@ export const PRESETS: ScenarioPreset[] = [
     blurb:
       "Short user message + system prompt, modest reply. High volume, low per-turn cost.",
     scenario: {
-      modelId: "claude-haiku-4.5",
+      modelId: "claude-haiku-5.5",
       text: { mode: "tokens", tokens: 1_200 },
       outputTokens: 400,
       cacheHitPercent: 70,
@@ -29,7 +29,7 @@ export const PRESETS: ScenarioPreset[] = [
     blurb:
       "Retrieved chunks plus a question; mid-length answer. Cache the corpus prefix.",
     scenario: {
-      modelId: "claude-sonnet-4.6",
+      modelId: "claude-sonnet-5.5",
       text: { mode: "tokens", tokens: 8_000 },
       outputTokens: 1_200,
       cacheHitPercent: 60,
@@ -43,7 +43,7 @@ export const PRESETS: ScenarioPreset[] = [
     blurb:
       "Large context (files + tools), longer reasoning-shaped output. Few requests, expensive each.",
     scenario: {
-      modelId: "claude-opus-4.7",
+      modelId: "claude-opus-5.5",
       text: { mode: "tokens", tokens: 40_000 },
       outputTokens: 6_000,
       cacheHitPercent: 40,
