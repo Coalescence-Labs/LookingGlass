@@ -183,6 +183,21 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
+      id: "gpt-5.5",
+      name: "GPT-5.5",
+      family: "openai",
+      priceInput: 5,
+      priceCachedInput: 0.5,
+      priceOutput: 30,
+      priceNote: "Standard window (<272K). Long-context rates are higher.",
+      sources: [
+        {
+          label: "OpenAI API pricing",
+          url: "https://developers.openai.com/api/docs/pricing",
+        },
+      ],
+    },
+    {
       id: "gpt-5.4",
       name: "GPT-5.4",
       family: "openai",
@@ -198,13 +213,28 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "gemini-2.5-pro",
-      name: "Gemini 2.5 Pro",
+      id: "gpt-5.4-mini",
+      name: "GPT-5.4 Mini",
+      family: "openai",
+      priceInput: 0.75,
+      priceCachedInput: 0.075,
+      priceOutput: 4.5,
+      sources: [
+        {
+          label: "OpenAI API pricing",
+          url: "https://developers.openai.com/api/docs/pricing",
+        },
+      ],
+    },
+    {
+      id: "gemini-4-argon",
+      name: "Gemini 4 Argon",
       family: "google",
-      priceInput: 1.25,
-      priceCachedInput: 0.125,
+      priceInput: 2,
+      priceCachedInput: 0.1,
       priceOutput: 10,
-      priceNote: "Paid tier, prompts ≤200K tokens.",
+      priceNote:
+        "Promo rates through Nov 30, 2026 ($2 / $10). Then $4 / $20. Implicit cache only.",
       sources: [
         {
           label: "Gemini API pricing",
@@ -213,8 +243,24 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "gemini-2.5-flash",
-      name: "Gemini 2.5 Flash",
+      id: "gemini-3.8-flash",
+      name: "Gemini 3.8 Flash",
+      family: "google",
+      priceInput: 0.75,
+      priceCachedInput: 0.075,
+      priceOutput: 3.75,
+      priceNote:
+        "Promo rates through Dec 31, 2026. Then $1.50 / $7.50.",
+      sources: [
+        {
+          label: "Gemini API pricing",
+          url: "https://ai.google.dev/gemini-api/docs/pricing",
+        },
+      ],
+    },
+    {
+      id: "gemini-3.5-flash-lite",
+      name: "Gemini 3.5 Flash-Lite",
       family: "google",
       priceInput: 0.3,
       priceCachedInput: 0.03,
@@ -227,14 +273,30 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "deepseek-v3.2",
-      name: "DeepSeek V3.2",
+      id: "deepseek-v4-pro",
+      name: "DeepSeek V4 Pro",
       family: "deepseek",
-      priceInput: 0.28,
-      priceCachedInput: 0.028,
-      priceOutput: 0.42,
+      priceInput: 0.66,
+      priceCachedInput: 0.022,
+      priceOutput: 1.98,
       priceNote:
-        "API prices vary by host; cache rate is DeepSeek's published cache hit.",
+        "Official off-peak rates. Peak hours (01–04 & 06–10 UTC weekdays) are 2×.",
+      sources: [
+        {
+          label: "DeepSeek API pricing",
+          url: "https://api-docs.deepseek.com/quick_start/pricing",
+        },
+      ],
+    },
+    {
+      id: "deepseek-flash",
+      name: "DeepSeek Flash",
+      family: "deepseek",
+      priceInput: 0.15,
+      priceCachedInput: 0.003,
+      priceOutput: 0.6,
+      priceNote:
+        "Serves DeepSeek-V4.1-Flash. Off-peak rates; peak is 2×.",
       sources: [
         {
           label: "DeepSeek API pricing",
@@ -267,28 +329,38 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       sources: [{ label: "Qwen", url: "https://qwen.ai" }],
     },
     {
-      id: "kimi-k2.5",
-      name: "Kimi K2.5",
+      id: "kimi-k3",
+      name: "Kimi K3",
       family: "moonshot",
-      priceInput: 0.6,
-      priceCachedInput: 0.15,
-      priceOutput: 3,
+      priceInput: 3,
+      priceCachedInput: 0.3,
+      priceOutput: 15,
+      priceNote:
+        "Cache writes billed separately ($3 / 5m TTL, $6 / 1h TTL per 1M).",
       sources: [
         {
-          label: "Kimi K2.5 API pricing",
-          url: "https://platform.kimi.ai/docs/pricing/chat-k25",
+          label: "Kimi API pricing",
+          url: "https://platform.kimi.ai/docs/pricing",
+        },
+        {
+          label: "Context caching",
+          url: "https://platform.kimi.ai/docs/guide/context-caching",
         },
       ],
     },
     {
-      id: "mistral-large-3",
-      name: "Mistral Large 3",
+      id: "mistral-large-4",
+      name: "Mistral Large 4",
       family: "mistral",
-      priceInput: 0.5,
-      priceOutput: 1.5,
+      priceInput: 1.36,
+      priceCachedInput: 0.14,
+      priceOutput: 4.18,
       priceNote: "La Plateforme list price; resellers may differ.",
       sources: [
-        { label: "Mistral AI pricing", url: "https://mistral.ai/pricing" },
+        {
+          label: "Mistral AI pricing",
+          url: "https://docs.mistral.ai/inference/pricing",
+        },
       ],
     },
   ],

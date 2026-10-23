@@ -10,16 +10,20 @@ Snapshot date: **2026-10-22** (`PRICING_SNAPSHOT.verifiedDate`).
 
 ## Rates
 
-Closed-model input/output seeded from Concept 02 (`src/lib/model-compare.ts`,
-verified 2026-04-18) and cross-checked against provider pricing pages for cache
-hit (cached-input) rates:
+Verified against provider pricing pages on 2026-10-22. Cache column is
+**cache hit / read** (not cache write).
 
-| Family | Cache hits |
-|--------|------------|
-| Anthropic | Opus 4.7 $0.50 · Sonnet 4.6 $0.30 · Haiku 4.5 $0.10 / 1M |
-| OpenAI | GPT-5.4 cached ≈ $0.25 / 1M (published cache read) |
-| Google | Gemini context-cache rates as listed on pricing docs |
-| DeepSeek / Kimi | Published cache where available; else omitted |
+| Family | Models in snapshot | Notes |
+|--------|--------------------|-------|
+| Anthropic | Opus / Sonnet / Haiku 5.5 | Cache hits at 0.05× input on Opus/Sonnet 5.5 |
+| OpenAI | GPT-5.5, GPT-5.4, GPT-5.4 Mini | Standard window (<272K); long-context is higher |
+| Google | Gemini 4 Argon, 3.8 Flash, 3.5 Flash-Lite | Argon & 3.8 Flash use current promo rates |
+| DeepSeek | V4 Pro, Flash | Official **off-peak**; peak weekday windows are 2× |
+| Meta / Qwen | Llama 4 Scout, Qwen 3.5 | Representative host rates (self-hostable) |
+| Moonshot | Kimi K3 | Cache writes billed separately |
+| Mistral | Large 4 | La Plateforme list |
+
+Grok remains excluded.
 
 ## Modalities
 

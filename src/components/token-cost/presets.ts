@@ -57,7 +57,7 @@ export const PRESETS: ScenarioPreset[] = [
     blurb:
       "A short clip, a voiceover, and a couple of frames — modalities dominate the bill.",
     scenario: {
-      modelId: "gemini-2.5-pro",
+      modelId: "gemini-4-argon",
       text: { mode: "tokens", tokens: 500 },
       images: { count: 4, size: "medium" },
       audioSeconds: 90,

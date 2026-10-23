@@ -76,7 +76,7 @@ describe("modalityTokens", () => {
 
   test("video format multiplier", () => {
     const low = modalityTokens({
-      modelId: "gemini-2.5-flash",
+      modelId: "gemini-3.8-flash",
       video: { seconds: 10, format: "low" },
       outputTokens: 0,
     });
