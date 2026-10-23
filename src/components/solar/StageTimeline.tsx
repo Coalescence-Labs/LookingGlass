@@ -33,6 +33,13 @@ const LOG_OFFSET = 1;
 /** Default loupe covers collapse through planetary nebula. */
 const LOUPE_DEFAULT_END_GYR = 12;
 const LOUPE_MIN_SPAN_GYR = 2;
+/**
+ * Hard ceiling for the draggable window: ~45% of the true clock
+ * (≈50 Gyr on a ~111 Gyr bar). Keeps white-dwarf cooling dominant on
+ * the unexpanded track while still letting the loupe reach early WD.
+ * Width of the tint is always loupeEnd / TOTAL_GYR — not a layout clip.
+ */
+const LOUPE_MAX_END_GYR = TOTAL_GYR * 0.45;
 
 const SHORT_NAME: Record<StageId, string> = {
   collapse: "Collapse",
@@ -123,7 +130,7 @@ export function StageTimeline({ activeStageId }: Props) {
   }, []);
 
   const loupeEndClamped = Math.min(
-    TOTAL_GYR,
+    LOUPE_MAX_END_GYR,
     Math.max(LOUPE_MIN_SPAN_GYR, loupeEnd),
   );
 
@@ -160,7 +167,7 @@ export function StageTimeline({ activeStageId }: Props) {
     const t = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
     const gyr = t * TOTAL_GYR;
     // Loupe always opens from t=0 (birth); the handle sets how far early life expands.
-    setLoupeEnd(Math.max(LOUPE_MIN_SPAN_GYR, Math.min(TOTAL_GYR * 0.45, gyr)));
+    setLoupeEnd(Math.max(LOUPE_MIN_SPAN_GYR, Math.min(LOUPE_MAX_END_GYR, gyr)));
   }, []);
 
   const onPointerDown = useCallback(
@@ -271,7 +278,9 @@ export function StageTimeline({ activeStageId }: Props) {
                     {SHORT_NAME[stage.id]}
                   </span>
                   {isNow && (
-                    <span className="type-mono-sm text-accent">Now · 4.6 Gyr</span>
+                    <span className="type-mono-sm text-accent">
+                      Now · {SUN_CURRENT_AGE_GYR} Gyr
+                    </span>
                   )}
                   {stage.isEvent && !isNow && (
                     <span className="type-mono-sm text-accent">Event</span>
@@ -332,19 +341,19 @@ export function StageTimeline({ activeStageId }: Props) {
 
         {/* Full career with draggable loupe bracket */}
         <div className="flex flex-col gap-3">
-          <div className="relative pt-7">
-            <div
-              className="pointer-events-none absolute top-0 z-10"
+          <div className="relative pt-6">
+            {/* Label lives in the reserved top padding (top-aligned), not bottom-anchored
+                on a zero-height wrapper — that pattern overflows upward into chrome. */}
+            <span
+              className="pointer-events-none absolute top-0 z-10 type-mono-sm -translate-x-1/2 whitespace-nowrap text-accent"
               style={{ left: `${nowLin * 100}%` }}
             >
-              <span className="type-mono-sm absolute bottom-2 left-0 -translate-x-1/2 whitespace-nowrap text-accent">
-                Now
-              </span>
-            </div>
+              Now
+            </span>
 
             <div
               ref={trackRef}
-              className="relative h-11 touch-none select-none border-t border-b border-line cursor-ew-resize"
+              className="relative h-11 w-full touch-none select-none border-t border-b border-line cursor-ew-resize"
               style={{ background: "rgba(9,9,11,0.45)" }}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
@@ -357,9 +366,9 @@ export function StageTimeline({ activeStageId }: Props) {
               role="slider"
               aria-label="Early-life loupe end"
               aria-valuemin={LOUPE_MIN_SPAN_GYR}
-              aria-valuemax={Math.round(TOTAL_GYR * 0.45)}
+              aria-valuemax={Math.round(LOUPE_MAX_END_GYR)}
               aria-valuenow={Math.round(loupeEndClamped)}
-              aria-valuetext={`Loupe covers first ${loupeEndClamped.toFixed(0)} billion years; edge at ${SHORT_NAME[edgeStage.id]}, ${formatFromNow(yearsFromNow)}, ${loupeSharePct}% of bar`}
+              aria-valuetext={`Loupe covers first ${loupeEndClamped.toFixed(0)} billion years; edge at ${SHORT_NAME[edgeStage.id]}, ${formatFromNow(yearsFromNow)}, ${loupeSharePct}% of the ${Math.round(TOTAL_GYR)} Gyr bar`}
             >
               <svg
                 width="100%"
@@ -465,7 +474,8 @@ export function StageTimeline({ activeStageId }: Props) {
                 {formatFromNow(yearsFromNow)}
               </span>
               <span className="type-mono-sm text-dim tabular-nums">
-                {loupeSharePct}% of bar
+                {loupeSharePct}% of {Math.round(TOTAL_GYR)} Gyr bar
+                {loupeEndClamped >= LOUPE_MAX_END_GYR - 0.05 ? " · max" : ""}
               </span>
             </div>
             <span className="type-mono-sm text-dim">
@@ -479,27 +489,28 @@ export function StageTimeline({ activeStageId }: Props) {
           className="flex flex-col gap-4 border border-line-2 p-4 md:p-5"
           style={{ background: "rgba(9,9,11,0.4)" }}
         >
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-6">
             <span className="type-mono-sm text-accent">
               Loupe · first {formatLoupeSpan(loupeEndClamped)} Gyr expanded
             </span>
             <span className="type-mono-sm text-bone-3">
-              collapse →{" "}
-              {loupeEndClamped >= 11 ? "planetary nebula" : "mid-career"}
+              {loupeSharePct}% of {Math.round(TOTAL_GYR)} Gyr clock · collapse →{" "}
+              {SHORT_NAME[edgeStage.id].toLowerCase()}
             </span>
           </div>
 
-          <div className="relative pt-7">
-            <div
-              className="pointer-events-none absolute top-0 z-10"
-              style={{ left: `${Math.min(0.98, nowLoupe) * 100}%` }}
+          {/* Now sits on its own row above the bar — never shares the title line. */}
+          <div className="relative pt-6">
+            <span
+              className="pointer-events-none absolute top-0 z-10 type-mono-sm -translate-x-1/2 whitespace-nowrap text-accent"
+              style={{
+                left: `${Math.min(0.92, Math.max(0.08, nowLoupe)) * 100}%`,
+              }}
             >
-              <span className="type-mono-sm absolute bottom-2 left-0 -translate-x-1/2 whitespace-nowrap text-accent">
-                Now · 4.6 Gyr
-              </span>
-            </div>
+              Now · {SUN_CURRENT_AGE_GYR} Gyr
+            </span>
 
-            <div className="relative h-14 border-t border-b border-line">
+            <div className="relative h-14 w-full border-t border-b border-line">
               {loupeBands.map(({ stage, left, width }) => {
                 const active = activeStageId === stage.id;
                 // Only the main-sequence band is wide enough for an in-band name;
