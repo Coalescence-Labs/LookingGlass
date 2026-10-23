@@ -182,7 +182,9 @@ export default function TokenCostPage() {
               </p>
               <p className="text-bone-3">
                 Grok is omitted, matching the rest of Series I. Open-weight
-                rates are representative host prices where noted.
+                rates are representative host prices where noted. Choose
+                Custom in the model picker to plug in your own input, cache,
+                and output rates.
               </p>
             </div>
 

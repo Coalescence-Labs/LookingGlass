@@ -2,22 +2,25 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import {
+  CUSTOM_MODEL_ID,
   PRICING_SNAPSHOT,
+  type CustomModelPricing,
   type ModelPricing,
 } from "@/lib/token-cost";
 
-const FAMILY_LABEL: Record<ModelPricing["family"], string> = {
-  anthropic: "Anthropic",
-  openai: "OpenAI",
-  google: "Google",
-  deepseek: "DeepSeek",
-  meta: "Meta",
-  qwen: "Qwen",
-  moonshot: "Moonshot",
-  mistral: "Mistral",
-};
+const FAMILY_LABEL: Record<Exclude<ModelPricing["family"], "custom">, string> =
+  {
+    anthropic: "Anthropic",
+    openai: "OpenAI",
+    google: "Google",
+    deepseek: "DeepSeek",
+    meta: "Meta",
+    qwen: "Qwen",
+    moonshot: "Moonshot",
+    mistral: "Mistral",
+  };
 
-const FAMILY_ORDER: ModelPricing["family"][] = [
+const FAMILY_ORDER: Exclude<ModelPricing["family"], "custom">[] = [
   "anthropic",
   "openai",
   "google",
@@ -28,7 +31,7 @@ const FAMILY_ORDER: ModelPricing["family"][] = [
   "mistral",
 ];
 
-function rateLine(m: ModelPricing): string {
+function rateLine(m: Pick<ModelPricing, "priceInput" | "priceCachedInput" | "priceOutput">): string {
   const cache =
     m.priceCachedInput != null ? ` · cache $${m.priceCachedInput}` : "";
   return `$${m.priceInput}${cache} · $${m.priceOutput}`;
@@ -36,16 +39,29 @@ function rateLine(m: ModelPricing): string {
 
 type Props = {
   value: string;
+  customPricing?: CustomModelPricing;
   onChange: (id: string) => void;
 };
 
-export function ModelPicker({ value, onChange }: Props) {
+export function ModelPicker({ value, customPricing, onChange }: Props) {
   const uid = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const selected =
-    PRICING_SNAPSHOT.models.find((m) => m.id === value) ??
-    PRICING_SNAPSHOT.models[0];
+  const isCustom = value === CUSTOM_MODEL_ID;
+  const selectedSnapshot = PRICING_SNAPSHOT.models.find((m) => m.id === value);
+  const selected: Pick<
+    ModelPricing,
+    "id" | "name" | "family" | "priceInput" | "priceCachedInput" | "priceOutput"
+  > = isCustom
+    ? {
+        id: CUSTOM_MODEL_ID,
+        name: "Custom",
+        family: "custom",
+        priceInput: customPricing?.priceInput ?? 0,
+        priceCachedInput: customPricing?.priceCachedInput,
+        priceOutput: customPricing?.priceOutput ?? 0,
+      }
+    : (selectedSnapshot ?? PRICING_SNAPSHOT.models[0]);
 
   useEffect(() => {
     if (!open) return;
@@ -84,7 +100,11 @@ export function ModelPicker({ value, onChange }: Props) {
             {selected.name}
           </span>
           <span className="mt-2 block type-mono-sm text-dim">
-            {FAMILY_LABEL[selected.family]} · {rateLine(selected)}
+            {isCustom
+              ? "Your rates"
+              : FAMILY_LABEL[selected.family as Exclude<ModelPricing["family"], "custom">]}
+            {" · "}
+            {rateLine(selected)}
             <span className="text-muted"> / 1M</span>
           </span>
         </span>
@@ -146,6 +166,41 @@ export function ModelPicker({ value, onChange }: Props) {
               </ul>
             </li>
           ))}
+          <li role="presentation">
+            <div className="sticky top-0 border-b border-line bg-ink-3/95 px-4 py-2 type-mono-sm text-dim backdrop-blur-sm">
+              Other
+            </div>
+            <ul role="group" aria-label="Other">
+              <li role="option" aria-selected={isCustom}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(CUSTOM_MODEL_ID);
+                    setOpen(false);
+                  }}
+                  className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-4 px-4 py-3.5 text-left transition-colors hover:bg-glass ${
+                    isCustom ? "bg-accent-soft/40" : ""
+                  }`}
+                >
+                  <span>
+                    <span
+                      className={`block font-serif text-[1.1rem] leading-tight ${
+                        isCustom ? "text-accent" : "text-bone"
+                      }`}
+                    >
+                      Custom
+                    </span>
+                    <span className="mt-1 block type-mono-sm text-dim">
+                      Enter your own input · cache · output rates
+                    </span>
+                  </span>
+                  {isCustom ? (
+                    <span className="type-mono-sm text-accent">Selected</span>
+                  ) : null}
+                </button>
+              </li>
+            </ul>
+          </li>
         </ul>
       ) : null}
     </div>

@@ -5,6 +5,7 @@ import {
 } from "./tokens";
 import {
   calculateCost,
+  CUSTOM_MODEL_ID,
   formatCostUsd,
   getModel,
   IMAGE_TOKENS,
@@ -224,5 +225,55 @@ describe("scenario caps", () => {
       outputTokens: Number.MAX_SAFE_INTEGER,
     });
     expect(result.tokens.output).toBe(1_000_000);
+  });
+});
+
+describe("custom model", () => {
+  test("calculates from user rates", () => {
+    const result = calculateCost({
+      modelId: CUSTOM_MODEL_ID,
+      customPricing: {
+        priceInput: 1,
+        priceCachedInput: 0.1,
+        priceOutput: 5,
+      },
+      text: { mode: "tokens", tokens: 1_000_000 },
+      outputTokens: 1_000_000,
+      cacheHitPercent: 50,
+    });
+    expect(result.model.name).toBe("Custom");
+    expect(result.costs.uncachedInputUsd).toBeCloseTo(0.5, 6);
+    expect(result.costs.cachedInputUsd).toBeCloseTo(0.05, 6);
+    expect(result.costs.outputUsd).toBeCloseTo(5, 6);
+    expect(result.costs.perRequestUsd).toBeCloseTo(5.55, 6);
+  });
+
+  test("parse accepts customPricing with custom id", () => {
+    const parsed = parseCostScenario({
+      modelId: CUSTOM_MODEL_ID,
+      customPricing: { priceInput: 3, priceCachedInput: 0.3, priceOutput: 15 },
+      outputTokens: 100,
+    });
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.scenario.customPricing?.priceInput).toBe(3);
+    }
+  });
+
+  test("parse rejects custom without rates", () => {
+    const parsed = parseCostScenario({
+      modelId: CUSTOM_MODEL_ID,
+      outputTokens: 100,
+    });
+    expect(parsed.ok).toBe(false);
+  });
+
+  test("parse rejects customPricing on a snapshot model", () => {
+    const parsed = parseCostScenario({
+      modelId: "gpt-5.4",
+      customPricing: { priceInput: 1, priceOutput: 2 },
+      outputTokens: 100,
+    });
+    expect(parsed.ok).toBe(false);
   });
 });

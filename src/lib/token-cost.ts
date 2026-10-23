@@ -24,7 +24,19 @@ export type ModelFamily =
   | "meta"
   | "qwen"
   | "moonshot"
-  | "mistral";
+  | "mistral"
+  | "custom";
+
+/** Sentinel id for user-entered rates (not in PRICING_SNAPSHOT). */
+export const CUSTOM_MODEL_ID = "custom";
+
+/** USD per 1M tokens — entered by the user for a custom model. */
+export type CustomModelPricing = {
+  priceInput: number;
+  /** Omit if the model has no cache-hit discount */
+  priceCachedInput?: number;
+  priceOutput: number;
+};
 
 export type ModelPricing = {
   id: string;
@@ -59,6 +71,8 @@ export type TextInput =
 
 export type CostScenario = {
   modelId: string;
+  /** Required when modelId is {@link CUSTOM_MODEL_ID} */
+  customPricing?: CustomModelPricing;
   text?: TextInput;
   images?: { count: number; size: ImageSizeBand };
   audioSeconds?: number;
@@ -129,6 +143,8 @@ export const SCENARIO_LIMITS = {
   cacheHitPercent: 100,
   requestsPerDay: 1_000_000,
   users: 100_000,
+  /** USD per 1M tokens — ceiling for custom rate fields */
+  pricePerMillion: 10_000,
 } as const;
 
 export const PRICING_SNAPSHOT: PricingSnapshot = {
@@ -370,6 +386,31 @@ export function getModel(id: string): ModelPricing | undefined {
   return PRICING_SNAPSHOT.models.find((m) => m.id === id);
 }
 
+/** Build a ModelPricing row from user-entered custom rates. */
+export function customModelFromPricing(
+  pricing: CustomModelPricing,
+): ModelPricing {
+  return {
+    id: CUSTOM_MODEL_ID,
+    name: "Custom",
+    family: "custom",
+    priceInput: pricing.priceInput,
+    priceCachedInput: pricing.priceCachedInput,
+    priceOutput: pricing.priceOutput,
+    sources: [],
+    priceNote: "Rates you entered — not from the Looking Glass snapshot.",
+  };
+}
+
+/** Resolve snapshot or custom pricing for a scenario. */
+export function resolveModel(scenario: CostScenario): ModelPricing | undefined {
+  if (scenario.modelId === CUSTOM_MODEL_ID) {
+    if (!scenario.customPricing) return undefined;
+    return customModelFromPricing(scenario.customPricing);
+  }
+  return getModel(scenario.modelId);
+}
+
 export function textToTokens(text: TextInput): number {
   switch (text.mode) {
     case "tokens":
@@ -416,8 +457,11 @@ export function usdForTokens(tokens: number, pricePerMillion: number): number {
 }
 
 export function calculateCost(scenario: CostScenario): CostResult {
-  const model = getModel(scenario.modelId);
+  const model = resolveModel(scenario);
   if (!model) {
+    if (scenario.modelId === CUSTOM_MODEL_ID) {
+      throw new Error("customPricing is required for a custom model.");
+    }
     throw new Error(`Unknown model: ${scenario.modelId}`);
   }
 
@@ -569,8 +613,21 @@ export function parseCostScenario(
   if (typeof b.modelId !== "string" || !b.modelId.trim()) {
     return { ok: false, error: "modelId is required." };
   }
-  if (!getModel(b.modelId)) {
+  const isCustom = b.modelId === CUSTOM_MODEL_ID;
+  if (!isCustom && !getModel(b.modelId)) {
     return { ok: false, error: `Unknown modelId: ${b.modelId}` };
+  }
+
+  let customPricing: CustomModelPricing | undefined;
+  if (isCustom) {
+    const parsedCustom = parseCustomPricing(b.customPricing);
+    if (!parsedCustom.ok) return parsedCustom;
+    customPricing = parsedCustom.value;
+  } else if (b.customPricing != null) {
+    return {
+      ok: false,
+      error: "customPricing is only valid when modelId is \"custom\".",
+    };
   }
 
   const outputTokens = asBoundedNumber(
@@ -587,6 +644,7 @@ export function parseCostScenario(
   const scenario: CostScenario = {
     modelId: b.modelId,
     outputTokens,
+    ...(customPricing ? { customPricing } : {}),
   };
 
   if (b.text != null) {
@@ -743,6 +801,55 @@ function asBoundedNumber(v: unknown, max: number): number | null {
     return null;
   }
   return v;
+}
+
+function parseCustomPricing(
+  raw: unknown,
+):
+  | { ok: true; value: CustomModelPricing }
+  | { ok: false; error: string } {
+  if (raw == null) {
+    return {
+      ok: false,
+      error: "customPricing is required when modelId is \"custom\".",
+    };
+  }
+  if (typeof raw !== "object") {
+    return { ok: false, error: "customPricing must be an object." };
+  }
+  const c = raw as Record<string, unknown>;
+  const priceInput = asBoundedNumber(c.priceInput, SCENARIO_LIMITS.pricePerMillion);
+  if (priceInput == null) {
+    return {
+      ok: false,
+      error: `customPricing.priceInput must be between 0 and ${SCENARIO_LIMITS.pricePerMillion.toLocaleString("en-US")}.`,
+    };
+  }
+  const priceOutput = asBoundedNumber(
+    c.priceOutput,
+    SCENARIO_LIMITS.pricePerMillion,
+  );
+  if (priceOutput == null) {
+    return {
+      ok: false,
+      error: `customPricing.priceOutput must be between 0 and ${SCENARIO_LIMITS.pricePerMillion.toLocaleString("en-US")}.`,
+    };
+  }
+  const value: CustomModelPricing = { priceInput, priceOutput };
+  if (c.priceCachedInput != null) {
+    const cached = asBoundedNumber(
+      c.priceCachedInput,
+      SCENARIO_LIMITS.pricePerMillion,
+    );
+    if (cached == null) {
+      return {
+        ok: false,
+        error: `customPricing.priceCachedInput must be between 0 and ${SCENARIO_LIMITS.pricePerMillion.toLocaleString("en-US")}.`,
+      };
+    }
+    value.priceCachedInput = cached;
+  }
+  return { ok: true, value };
 }
 
 export function formatCostUsd(n: number): string {

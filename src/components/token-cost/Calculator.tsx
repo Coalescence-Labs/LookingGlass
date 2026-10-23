@@ -2,11 +2,14 @@
 
 import { useEffect, useId, useRef, useState, useEffectEvent } from "react";
 import {
+  CUSTOM_MODEL_ID,
   formatCostUsd,
+  getModel,
   PRICING_SNAPSHOT,
   SCENARIO_LIMITS,
   type CostResult,
   type CostScenario,
+  type CustomModelPricing,
   type ImageSizeBand,
   type TextInput,
   type VideoFormatBand,
@@ -20,6 +23,12 @@ import {
 } from "@/components/ui/tooltip";
 import { ModelPicker } from "./ModelPicker";
 import { PRESETS } from "./presets";
+
+const DEFAULT_CUSTOM: CustomModelPricing = {
+  priceInput: 2,
+  priceCachedInput: 0.2,
+  priceOutput: 10,
+};
 
 type TextMode = TextInput["mode"];
 
@@ -276,6 +285,38 @@ export function Calculator() {
     setScenario((s) => ({ ...s, ...partial }));
   }
 
+  function setModel(modelId: string) {
+    setActivePreset(null);
+    setScenario((s) => {
+      if (modelId === CUSTOM_MODEL_ID) {
+        const from = getModel(s.modelId);
+        const customPricing: CustomModelPricing = s.customPricing ?? {
+          priceInput: from?.priceInput ?? DEFAULT_CUSTOM.priceInput,
+          priceCachedInput:
+            from?.priceCachedInput ??
+            from?.priceInput ??
+            DEFAULT_CUSTOM.priceCachedInput,
+          priceOutput: from?.priceOutput ?? DEFAULT_CUSTOM.priceOutput,
+        };
+        return { ...s, modelId, customPricing };
+      }
+      const { customPricing: _drop, ...rest } = s;
+      return { ...rest, modelId };
+    });
+  }
+
+  function patchCustom(partial: Partial<CustomModelPricing>) {
+    setActivePreset(null);
+    setScenario((s) => {
+      const base = s.customPricing ?? DEFAULT_CUSTOM;
+      return {
+        ...s,
+        modelId: CUSTOM_MODEL_ID,
+        customPricing: { ...base, ...partial },
+      };
+    });
+  }
+
   function setText(mode: TextMode, value: number) {
     setActivePreset(null);
     const capped =
@@ -302,6 +343,8 @@ export function Calculator() {
       ...preset.scenario,
       modelId: preset.scenario.modelId ?? scenario.modelId,
     };
+    // Presets always pick a snapshot model — drop any custom rates.
+    delete next.customPricing;
     setScenario(next);
     setModsOpen(hasModalities(next));
     setScaleOpen(true);
@@ -388,9 +431,60 @@ export function Calculator() {
             >
               <ModelPicker
                 value={scenario.modelId}
-                onChange={(modelId) => patch({ modelId })}
+                customPricing={scenario.customPricing}
+                onChange={setModel}
               />
             </Field>
+
+            {scenario.modelId === CUSTOM_MODEL_ID ? (
+              <div className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-3">
+                <Field
+                  label="Input $/1M"
+                  htmlFor={`${uid}-c-in`}
+                  hint="Uncached input rate, USD per million tokens."
+                >
+                  <NumberField
+                    id={`${uid}-c-in`}
+                    value={scenario.customPricing?.priceInput ?? 0}
+                    onChange={(priceInput) => patchCustom({ priceInput })}
+                    max={SCENARIO_LIMITS.pricePerMillion}
+                    step={0.01}
+                  />
+                </Field>
+                <Field
+                  label="Cached $/1M"
+                  htmlFor={`${uid}-c-cache`}
+                  hint="Cache-hit rate. Match input if there is no discount."
+                >
+                  <NumberField
+                    id={`${uid}-c-cache`}
+                    value={
+                      scenario.customPricing?.priceCachedInput ??
+                      scenario.customPricing?.priceInput ??
+                      0
+                    }
+                    onChange={(priceCachedInput) =>
+                      patchCustom({ priceCachedInput })
+                    }
+                    max={SCENARIO_LIMITS.pricePerMillion}
+                    step={0.01}
+                  />
+                </Field>
+                <Field
+                  label="Output $/1M"
+                  htmlFor={`${uid}-c-out`}
+                  hint="Output rate, USD per million tokens."
+                >
+                  <NumberField
+                    id={`${uid}-c-out`}
+                    value={scenario.customPricing?.priceOutput ?? 0}
+                    onChange={(priceOutput) => patchCustom({ priceOutput })}
+                    max={SCENARIO_LIMITS.pricePerMillion}
+                    step={0.01}
+                  />
+                </Field>
+              </div>
+            ) : null}
 
             <div className="mt-10 grid gap-x-8 gap-y-7 sm:grid-cols-2">
               <Field
