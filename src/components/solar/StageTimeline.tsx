@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useId,
   useMemo,
   useRef,
@@ -13,7 +14,9 @@ import {
   STAGES,
   SUN_CURRENT_AGE_GYR,
   TOTAL_GYR,
+  formatGyr,
   formatLogYears,
+  stageAt,
   stageDurationYears,
   type Stage,
   type StageId,
@@ -68,12 +71,46 @@ function bandFill(stage: Stage, active: boolean): string {
   return "var(--color-glass)";
 }
 
+function formatFromNow(deltaGyr: number): string {
+  if (Math.abs(deltaGyr) < 0.08) return "≈ now";
+  if (deltaGyr > 0) return `${formatGyr(deltaGyr)} from now`;
+  return `${formatGyr(-deltaGyr)} ago`;
+}
+
+function formatLoupeSpan(gyr: number): string {
+  return gyr >= 10 ? Math.round(gyr).toString() : gyr.toFixed(1);
+}
+
 export function StageTimeline({ activeStageId }: Props) {
   const gradientId = useId();
+  const clockRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
+  const draggingRef = useRef(false);
 
   const [loupeEnd, setLoupeEnd] = useState(LOUPE_DEFAULT_END_GYR);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduceMotion(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    const el = clockRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.4, rootMargin: "0px 0px -8% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const logRows = useMemo(() => {
     const weights = STAGES.map((s) => logDurationWeight(stageDurationYears(s)));
@@ -109,6 +146,13 @@ export function StageTimeline({ activeStageId }: Props) {
   const wdStage = STAGES.find((s) => s.id === "white-dwarf")!;
   const wdSharePct = Math.round((wdStage.durationGyr / TOTAL_GYR) * 100);
 
+  const edgeStage = stageAt(loupeEndClamped);
+  const yearsFromNow = loupeEndClamped - SUN_CURRENT_AGE_GYR;
+  const loupeSharePct = Math.max(1, Math.round(loupeWidthPct));
+
+  const shouldPulse =
+    inView && !isDragging && !isHovered && !reduceMotion;
+
   const applyPointer = useCallback((clientX: number) => {
     const el = trackRef.current;
     if (!el) return;
@@ -121,7 +165,8 @@ export function StageTimeline({ activeStageId }: Props) {
 
   const onPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLElement>) => {
-      dragging.current = true;
+      draggingRef.current = true;
+      setIsDragging(true);
       trackRef.current?.setPointerCapture(e.pointerId);
       applyPointer(e.clientX);
     },
@@ -130,21 +175,68 @@ export function StageTimeline({ activeStageId }: Props) {
 
   const onPointerMove = useCallback(
     (e: ReactPointerEvent<HTMLElement>) => {
-      if (!dragging.current) return;
+      if (!draggingRef.current) return;
       applyPointer(e.clientX);
     },
     [applyPointer],
   );
 
-  const onPointerUp = useCallback(() => {
-    dragging.current = false;
+  const onPointerUp = useCallback((e: ReactPointerEvent<HTMLElement>) => {
+    draggingRef.current = false;
+    setIsDragging(false);
+    const el = trackRef.current;
+    if (!el) {
+      setIsHovered(false);
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    const over =
+      e.clientX >= r.left &&
+      e.clientX <= r.right &&
+      e.clientY >= r.top &&
+      e.clientY <= r.bottom;
+    setIsHovered(over);
   }, []);
+
+  const handleTransform = isDragging
+    ? "translate(-50%, -50%) scale(1.18)"
+    : isHovered
+      ? "translate(-50%, -50%) scale(1.08)"
+      : "translate(-50%, -50%) scale(1)";
+
+  const handleBackground = isDragging
+    ? "var(--color-accent)"
+    : isHovered
+      ? "color-mix(in srgb, var(--color-accent) 42%, var(--color-ink-2))"
+      : "var(--color-ink-2)";
+
+  const handleShadow = isDragging
+    ? "0 0 0 3px color-mix(in srgb, var(--color-accent) 40%, transparent)"
+    : isHovered
+      ? "0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent)"
+      : "0 0 0 0 transparent";
 
   return (
     <div
       className="border border-line p-5 md:p-8"
       style={{ background: "rgba(15, 15, 18, 0.6)" }}
     >
+      <style>{`
+        @keyframes loupe-invite {
+          0%, 100% {
+            box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 0%, transparent);
+          }
+          50% {
+            box-shadow: 0 0 0 7px color-mix(in srgb, var(--color-accent) 24%, transparent);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .loupe-handle[data-pulse="true"] {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
       {/* ——— Duration ladder (log) ——— */}
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-line pb-4">
@@ -219,13 +311,24 @@ export function StageTimeline({ activeStageId }: Props) {
       </div>
 
       {/* ——— True clock (linear) + loupe ——— */}
-      <div className="mt-12 flex flex-col gap-6 border-t border-line pt-10 md:mt-14 md:pt-12">
+      <div
+        ref={clockRef}
+        className="mt-12 flex flex-col gap-6 border-t border-line pt-10 md:mt-14 md:pt-12"
+      >
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
           <span className="type-mono-sm">True clock · linear scale</span>
           <span className="type-mono-sm text-bone-3">
             0 → {Math.round(TOTAL_GYR)} billion years
           </span>
         </div>
+
+        <p className="type-body max-w-2xl">
+          The ladder ranks phases by how long they last. This clock lays the
+          same life end to end — true proportions — so white-dwarf cooling owns
+          nearly the whole bar. Move the loupe to expand the left-edge luminous
+          career and see which phase sits under the handle, how far that edge
+          is from Now, and what share of the bar you&rsquo;ve opened.
+        </p>
 
         {/* Full career with draggable loupe bracket */}
         <div className="flex flex-col gap-3">
@@ -247,12 +350,16 @@ export function StageTimeline({ activeStageId }: Props) {
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
+              onPointerEnter={() => setIsHovered(true)}
+              onPointerLeave={() => {
+                if (!draggingRef.current) setIsHovered(false);
+              }}
               role="slider"
               aria-label="Early-life loupe end"
               aria-valuemin={LOUPE_MIN_SPAN_GYR}
               aria-valuemax={Math.round(TOTAL_GYR * 0.45)}
               aria-valuenow={Math.round(loupeEndClamped)}
-              aria-valuetext={`Loupe covers first ${loupeEndClamped.toFixed(0)} billion years`}
+              aria-valuetext={`Loupe covers first ${loupeEndClamped.toFixed(0)} billion years; edge at ${SHORT_NAME[edgeStage.id]}, ${formatFromNow(yearsFromNow)}, ${loupeSharePct}% of bar`}
             >
               <svg
                 width="100%"
@@ -296,8 +403,20 @@ export function StageTimeline({ activeStageId }: Props) {
 
               {/* End handle (visual; track owns the drag) */}
               <div
-                className="pointer-events-none absolute top-1/2 z-20 h-8 w-3 -translate-x-1/2 -translate-y-1/2 border border-accent bg-ink-2"
-                style={{ left: `${loupeWidthPct}%` }}
+                className="loupe-handle pointer-events-none absolute top-1/2 z-20 h-8 w-3 border border-accent"
+                data-pulse={shouldPulse ? "true" : "false"}
+                data-dragging={isDragging ? "true" : "false"}
+                style={{
+                  left: `${loupeWidthPct}%`,
+                  background: handleBackground,
+                  transform: handleTransform,
+                  boxShadow: shouldPulse ? undefined : handleShadow,
+                  transition:
+                    "background 180ms var(--ease-quart), box-shadow 180ms var(--ease-quart), transform 180ms var(--ease-quart)",
+                  animation: shouldPulse
+                    ? "loupe-invite 2.6s var(--ease-quart) infinite"
+                    : undefined,
+                }}
                 aria-hidden
               />
 
@@ -329,30 +448,40 @@ export function StageTimeline({ activeStageId }: Props) {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          {/* Live loupe readout — teaches while dragging */}
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span
+                className="font-serif text-[1.05rem] leading-none"
+                style={{
+                  color: edgeStage.isEvent
+                    ? "var(--color-accent)"
+                    : "var(--color-bone)",
+                }}
+              >
+                {SHORT_NAME[edgeStage.id]}
+              </span>
+              <span className="type-mono-sm text-dim tabular-nums">
+                {formatFromNow(yearsFromNow)}
+              </span>
+              <span className="type-mono-sm text-dim tabular-nums">
+                {loupeSharePct}% of bar
+              </span>
+            </div>
             <span className="type-mono-sm text-dim">
-              Drag the handle — loupe covers the first{" "}
-              {loupeEndClamped >= 10
-                ? Math.round(loupeEndClamped)
-                : loupeEndClamped.toFixed(1)}{" "}
-              Gyr
-            </span>
-            <span className="type-mono-sm text-dim">
-              ~{wdSharePct}% of the bar is white dwarf
+              ~{wdSharePct}% white dwarf
             </span>
           </div>
         </div>
 
         {/* Loupe detail — one insight: luminous career readable */}
-        <div className="flex flex-col gap-4 border border-line-2 p-4 md:p-5"
+        <div
+          className="flex flex-col gap-4 border border-line-2 p-4 md:p-5"
           style={{ background: "rgba(9,9,11,0.4)" }}
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <span className="type-mono-sm text-accent">
-              Loupe · first {loupeEndClamped >= 10
-                ? Math.round(loupeEndClamped)
-                : loupeEndClamped.toFixed(1)}{" "}
-              Gyr expanded
+              Loupe · first {formatLoupeSpan(loupeEndClamped)} Gyr expanded
             </span>
             <span className="type-mono-sm text-bone-3">
               collapse →{" "}

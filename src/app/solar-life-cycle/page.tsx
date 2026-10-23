@@ -121,8 +121,10 @@ export default function SolarLifeCyclePage() {
         <Reveal delay={0.08}>
           <p className="mt-8 type-lede max-w-2xl">
             First the duration ladder — every phase sized by how long it lasts,
-            helium flash included. Then the true clock: drag the loupe across
-            the left-edge sliver and watch white-dwarf cooling reclaim the bar.
+            helium flash included. Then the true clock: the same life laid end
+            to end, where white-dwarf cooling owns nearly the whole bar. Move
+            the loupe to expand the brief luminous career the linear scale
+            hides.
           </p>
         </Reveal>
 
