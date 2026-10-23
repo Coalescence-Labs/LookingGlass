@@ -120,11 +120,9 @@ export default function SolarLifeCyclePage() {
 
         <Reveal delay={0.08}>
           <p className="mt-8 type-lede max-w-2xl">
-            The sun&rsquo;s life unfolds on timescales from seconds to a
-            hundred billion years — from the helium flash to the long cooling
-            of the white dwarf it leaves behind. A log scale makes every
-            phase visible; a linear scale shows what one billion years really
-            looks like next to the others.
+            Log makes every phase readable — including the minute of a helium
+            flash. Linear tells the truth of proportion: the luminous career is
+            a left-edge sliver; white-dwarf cooling owns the rest.
           </p>
         </Reveal>
 
