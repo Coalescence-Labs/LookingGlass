@@ -11,6 +11,12 @@ import {
   type VideoFormatBand,
 } from "@/lib/token-cost";
 import { formatTokens } from "@/lib/tokens";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ModelPicker } from "./ModelPicker";
 import { PRESETS } from "./presets";
 
@@ -31,24 +37,22 @@ const DEFAULT: CostScenario = {
 const fieldClass =
   "w-full bg-ink-3 border border-line px-3 py-2 type-mono text-bone text-[0.8rem] outline-none transition-colors hover:border-line-2 focus:border-accent";
 
-/** Hover/focus tooltip — visible panel, not the browser title chrome. */
 function Hint({ label }: { label: string }) {
   return (
-    <span className="group/hint relative ml-1.5 inline-flex align-middle">
-      <span
-        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-line-2 type-mono text-[0.55rem] text-muted transition-colors group-hover/hint:border-accent group-hover/hint:text-accent group-focus-within/hint:border-accent group-focus-within/hint:text-accent cursor-help"
-        tabIndex={0}
-        aria-label={label}
-      >
-        ?
-      </span>
-      <span
-        role="tooltip"
-        className="pointer-events-none absolute left-1/2 top-[calc(100%+0.4rem)] z-30 w-56 -translate-x-1/2 border border-line-2 bg-ink-2 px-2.5 py-2 text-left font-sans text-[0.72rem] font-normal normal-case tracking-normal text-bone-2 leading-snug opacity-0 shadow-[0_12px_28px_rgba(0,0,0,0.4)] transition-opacity duration-150 group-hover/hint:opacity-100 group-focus-within/hint:opacity-100"
-      >
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="ml-1.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-line-2 type-mono text-[0.55rem] text-muted transition-colors hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:text-accent"
+          aria-label={label}
+        >
+          ?
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="whitespace-pre-line">
         {label}
-      </span>
-    </span>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -323,6 +327,7 @@ export function Calculator() {
   const scaleSummary = `${scenario.requestsPerDay ?? 0}/day · ${scenario.users ?? 1}u`;
 
   return (
+    <TooltipProvider>
     <div
       className="flex max-h-[100dvh] flex-col border border-line overflow-hidden"
       style={{ background: "rgba(15,15,18,0.55)" }}
@@ -345,25 +350,25 @@ export function Calculator() {
           {PRESETS.map((p) => {
             const on = activePreset === p.id;
             return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => applyPreset(p.id)}
-                aria-pressed={on}
-                className={`group/preset relative type-mono-sm px-3 py-1.5 border transition-colors ${
-                  on
-                    ? "border-accent text-accent bg-accent-soft"
-                    : "border-line text-bone-3 hover:border-line-2 hover:text-bone hover:bg-glass"
-                }`}
-              >
-                {p.label}
-                <span
-                  role="tooltip"
-                  className="pointer-events-none absolute left-0 top-[calc(100%+0.45rem)] z-30 w-56 border border-line-2 bg-ink-2 px-2.5 py-2 text-left font-sans text-[0.72rem] font-normal normal-case tracking-normal text-bone-2 leading-snug opacity-0 shadow-[0_12px_28px_rgba(0,0,0,0.4)] transition-opacity duration-150 group-hover/preset:opacity-100"
-                >
+              <Tooltip key={p.id}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset(p.id)}
+                    aria-pressed={on}
+                    className={`type-mono-sm px-3 py-1.5 border transition-colors ${
+                      on
+                        ? "border-accent text-accent bg-accent-soft"
+                        : "border-line text-bone-3 hover:border-line-2 hover:text-bone hover:bg-glass"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="start">
                   {p.blurb}
-                </span>
-              </button>
+                </TooltipContent>
+              </Tooltip>
             );
           })}
         </div>
@@ -681,5 +686,6 @@ export function Calculator() {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
