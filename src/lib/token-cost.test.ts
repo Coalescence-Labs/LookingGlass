@@ -5,6 +5,7 @@ import {
 } from "./tokens";
 import {
   calculateCost,
+  CUSTOM_MODEL_ID,
   formatCostUsd,
   getModel,
   IMAGE_TOKENS,
@@ -60,7 +61,7 @@ describe("textToTokens", () => {
 describe("modalityTokens", () => {
   test("sums text, images, audio, video", () => {
     const t = modalityTokens({
-      modelId: "claude-sonnet-4.6",
+      modelId: "claude-sonnet-5.5",
       text: { mode: "tokens", tokens: 1_000 },
       images: { count: 2, size: "medium" },
       audioSeconds: 10,
@@ -76,7 +77,7 @@ describe("modalityTokens", () => {
 
   test("video format multiplier", () => {
     const low = modalityTokens({
-      modelId: "gemini-2.5-flash",
+      modelId: "gemini-3.8-flash",
       video: { seconds: 10, format: "low" },
       outputTokens: 0,
     });
@@ -99,32 +100,32 @@ describe("usdForTokens", () => {
 describe("calculateCost", () => {
   test("simple text + output with no cache", () => {
     const result = calculateCost({
-      modelId: "claude-sonnet-4.6",
+      modelId: "claude-sonnet-5.5",
       text: { mode: "tokens", tokens: 1_000_000 },
       outputTokens: 1_000_000,
       cacheHitPercent: 0,
     });
-    // $3 input + $15 output
-    expect(result.costs.uncachedInputUsd).toBeCloseTo(3, 6);
+    // $2 input + $10 output
+    expect(result.costs.uncachedInputUsd).toBeCloseTo(2, 6);
     expect(result.costs.cachedInputUsd).toBeCloseTo(0, 6);
-    expect(result.costs.outputUsd).toBeCloseTo(15, 6);
-    expect(result.costs.perRequestUsd).toBeCloseTo(18, 6);
+    expect(result.costs.outputUsd).toBeCloseTo(10, 6);
+    expect(result.costs.perRequestUsd).toBeCloseTo(12, 6);
     expect(result.verifiedDate).toBe(PRICING_SNAPSHOT.verifiedDate);
   });
 
   test("cache hit percent splits text only", () => {
     const result = calculateCost({
-      modelId: "claude-opus-4.7",
+      modelId: "claude-opus-5.5",
       text: { mode: "tokens", tokens: 1_000_000 },
       images: { count: 0, size: "small" },
       outputTokens: 0,
       cacheHitPercent: 80,
     });
-    // 800k @ $0.50 + 200k @ $5
+    // 800k @ $0.20 + 200k @ $4
     expect(result.tokens.cachedText).toBeCloseTo(800_000, 6);
     expect(result.tokens.uncachedText).toBeCloseTo(200_000, 6);
-    expect(result.costs.cachedInputUsd).toBeCloseTo(0.4, 6);
-    expect(result.costs.uncachedInputUsd).toBeCloseTo(1, 6);
+    expect(result.costs.cachedInputUsd).toBeCloseTo(0.16, 6);
+    expect(result.costs.uncachedInputUsd).toBeCloseTo(0.8, 6);
   });
 
   test("model without cache rate falls back to input price", () => {
@@ -145,7 +146,7 @@ describe("calculateCost", () => {
 
   test("monthly scale", () => {
     const result = calculateCost({
-      modelId: "claude-haiku-4.5",
+      modelId: "claude-haiku-5.5",
       text: { mode: "tokens", tokens: 1_000 },
       outputTokens: 500,
       requestsPerDay: 100,
@@ -203,5 +204,76 @@ describe("formatCostUsd", () => {
     expect(formatCostUsd(0)).toBe("$0");
     expect(formatCostUsd(0.005)).toBe("$0.0050");
     expect(formatCostUsd(1.23)).toBe("$1.23");
+    expect(formatCostUsd(2_500_000)).toBe("$2.50M");
+    expect(formatCostUsd(1_250_000_000)).toBe("$1.25B");
+  });
+});
+
+describe("scenario caps", () => {
+  test("rejects oversize output tokens", () => {
+    const parsed = parseCostScenario({
+      modelId: "gpt-5.4",
+      outputTokens: 50_000_000,
+    });
+    expect(parsed.ok).toBe(false);
+  });
+
+  test("calculateCost clamps absurd output", () => {
+    const result = calculateCost({
+      modelId: "claude-sonnet-5.5",
+      text: { mode: "tokens", tokens: 1_000 },
+      outputTokens: Number.MAX_SAFE_INTEGER,
+    });
+    expect(result.tokens.output).toBe(1_000_000);
+  });
+});
+
+describe("custom model", () => {
+  test("calculates from user rates", () => {
+    const result = calculateCost({
+      modelId: CUSTOM_MODEL_ID,
+      customPricing: {
+        priceInput: 1,
+        priceCachedInput: 0.1,
+        priceOutput: 5,
+      },
+      text: { mode: "tokens", tokens: 1_000_000 },
+      outputTokens: 1_000_000,
+      cacheHitPercent: 50,
+    });
+    expect(result.model.name).toBe("Custom");
+    expect(result.costs.uncachedInputUsd).toBeCloseTo(0.5, 6);
+    expect(result.costs.cachedInputUsd).toBeCloseTo(0.05, 6);
+    expect(result.costs.outputUsd).toBeCloseTo(5, 6);
+    expect(result.costs.perRequestUsd).toBeCloseTo(5.55, 6);
+  });
+
+  test("parse accepts customPricing with custom id", () => {
+    const parsed = parseCostScenario({
+      modelId: CUSTOM_MODEL_ID,
+      customPricing: { priceInput: 3, priceCachedInput: 0.3, priceOutput: 15 },
+      outputTokens: 100,
+    });
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.scenario.customPricing?.priceInput).toBe(3);
+    }
+  });
+
+  test("parse rejects custom without rates", () => {
+    const parsed = parseCostScenario({
+      modelId: CUSTOM_MODEL_ID,
+      outputTokens: 100,
+    });
+    expect(parsed.ok).toBe(false);
+  });
+
+  test("parse rejects customPricing on a snapshot model", () => {
+    const parsed = parseCostScenario({
+      modelId: "gpt-5.4",
+      customPricing: { priceInput: 1, priceOutput: 2 },
+      outputTokens: 100,
+    });
+    expect(parsed.ok).toBe(false);
   });
 });

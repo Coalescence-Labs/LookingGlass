@@ -24,7 +24,19 @@ export type ModelFamily =
   | "meta"
   | "qwen"
   | "moonshot"
-  | "mistral";
+  | "mistral"
+  | "custom";
+
+/** Sentinel id for user-entered rates (not in PRICING_SNAPSHOT). */
+export const CUSTOM_MODEL_ID = "custom";
+
+/** USD per 1M tokens — entered by the user for a custom model. */
+export type CustomModelPricing = {
+  priceInput: number;
+  /** Omit if the model has no cache-hit discount */
+  priceCachedInput?: number;
+  priceOutput: number;
+};
 
 export type ModelPricing = {
   id: string;
@@ -59,6 +71,8 @@ export type TextInput =
 
 export type CostScenario = {
   modelId: string;
+  /** Required when modelId is {@link CUSTOM_MODEL_ID} */
+  customPricing?: CustomModelPricing;
   text?: TextInput;
   images?: { count: number; size: ImageSizeBand };
   audioSeconds?: number;
@@ -117,16 +131,32 @@ export const VIDEO_FORMAT_MULTIPLIER: Record<VideoFormatBand, number> = {
   high: 1.5,
 };
 
+/** Hard caps — keeps the calculator honest and the layout intact. */
+export const SCENARIO_LIMITS = {
+  tokens: 10_000_000, // largest public context windows today
+  words: 7_500_000,
+  chars: 40_000_000,
+  outputTokens: 1_000_000,
+  images: 500,
+  audioSeconds: 86_400, // 24h
+  videoSeconds: 14_400, // 4h
+  cacheHitPercent: 100,
+  requestsPerDay: 1_000_000,
+  users: 100_000,
+  /** USD per 1M tokens — ceiling for custom rate fields */
+  pricePerMillion: 10_000,
+} as const;
+
 export const PRICING_SNAPSHOT: PricingSnapshot = {
   verifiedDate: "2026-10-22",
   models: [
     {
-      id: "claude-opus-4.7",
-      name: "Claude Opus 4.7",
+      id: "claude-opus-5.5",
+      name: "Claude Opus 5.5",
       family: "anthropic",
-      priceInput: 5,
-      priceCachedInput: 0.5,
-      priceOutput: 25,
+      priceInput: 4,
+      priceCachedInput: 0.2,
+      priceOutput: 20,
       sources: [
         {
           label: "Claude API pricing",
@@ -139,12 +169,12 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "claude-sonnet-4.6",
-      name: "Claude Sonnet 4.6",
+      id: "claude-sonnet-5.5",
+      name: "Claude Sonnet 5.5",
       family: "anthropic",
-      priceInput: 3,
-      priceCachedInput: 0.3,
-      priceOutput: 15,
+      priceInput: 2,
+      priceCachedInput: 0.1,
+      priceOutput: 10,
       sources: [
         {
           label: "Claude API pricing",
@@ -153,16 +183,33 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "claude-haiku-4.5",
-      name: "Claude Haiku 4.5",
+      id: "claude-haiku-5.5",
+      name: "Claude Haiku 5.5",
       family: "anthropic",
-      priceInput: 1,
-      priceCachedInput: 0.1,
-      priceOutput: 5,
+      priceInput: 0.1,
+      priceCachedInput: 0.01,
+      priceOutput: 0.5,
+      priceNote:
+        "Haiku 5.5 ≤100K-prompt tier. Prompts over 100K tokens are $0.50 / $2.50.",
       sources: [
         {
           label: "Claude API pricing",
           url: "https://platform.claude.com/docs/en/about-claude/pricing",
+        },
+      ],
+    },
+    {
+      id: "gpt-5.5",
+      name: "GPT-5.5",
+      family: "openai",
+      priceInput: 5,
+      priceCachedInput: 0.5,
+      priceOutput: 30,
+      priceNote: "Standard window (<272K). Long-context rates are higher.",
+      sources: [
+        {
+          label: "OpenAI API pricing",
+          url: "https://developers.openai.com/api/docs/pricing",
         },
       ],
     },
@@ -173,20 +220,37 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       priceInput: 2.5,
       priceCachedInput: 0.25,
       priceOutput: 15,
+      priceNote: "Standard window (<272K). Long-context rates are higher.",
       sources: [
         {
           label: "OpenAI API pricing",
-          url: "https://openai.com/api/pricing/",
+          url: "https://developers.openai.com/api/docs/pricing",
         },
       ],
     },
     {
-      id: "gemini-2.5-pro",
-      name: "Gemini 2.5 Pro",
+      id: "gpt-5.4-mini",
+      name: "GPT-5.4 Mini",
+      family: "openai",
+      priceInput: 0.75,
+      priceCachedInput: 0.075,
+      priceOutput: 4.5,
+      sources: [
+        {
+          label: "OpenAI API pricing",
+          url: "https://developers.openai.com/api/docs/pricing",
+        },
+      ],
+    },
+    {
+      id: "gemini-4-argon",
+      name: "Gemini 4 Argon",
       family: "google",
-      priceInput: 1.25,
-      priceCachedInput: 0.315,
+      priceInput: 2,
+      priceCachedInput: 0.1,
       priceOutput: 10,
+      priceNote:
+        "Promo rates through Nov 30, 2026 ($2 / $10). Then $4 / $20. Implicit cache only.",
       sources: [
         {
           label: "Gemini API pricing",
@@ -195,11 +259,27 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "gemini-2.5-flash",
-      name: "Gemini 2.5 Flash",
+      id: "gemini-3.8-flash",
+      name: "Gemini 3.8 Flash",
+      family: "google",
+      priceInput: 0.75,
+      priceCachedInput: 0.075,
+      priceOutput: 3.75,
+      priceNote:
+        "Promo rates through Dec 31, 2026. Then $1.50 / $7.50.",
+      sources: [
+        {
+          label: "Gemini API pricing",
+          url: "https://ai.google.dev/gemini-api/docs/pricing",
+        },
+      ],
+    },
+    {
+      id: "gemini-3.5-flash-lite",
+      name: "Gemini 3.5 Flash-Lite",
       family: "google",
       priceInput: 0.3,
-      priceCachedInput: 0.075,
+      priceCachedInput: 0.03,
       priceOutput: 2.5,
       sources: [
         {
@@ -209,14 +289,30 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       ],
     },
     {
-      id: "deepseek-v3.2",
-      name: "DeepSeek V3.2",
+      id: "deepseek-v4-pro",
+      name: "DeepSeek V4 Pro",
       family: "deepseek",
-      priceInput: 0.28,
-      priceCachedInput: 0.028,
-      priceOutput: 0.42,
+      priceInput: 0.66,
+      priceCachedInput: 0.022,
+      priceOutput: 1.98,
       priceNote:
-        "API prices vary by host; cache rate is DeepSeek's published cache hit.",
+        "Official off-peak rates. Peak hours (01–04 & 06–10 UTC weekdays) are 2×.",
+      sources: [
+        {
+          label: "DeepSeek API pricing",
+          url: "https://api-docs.deepseek.com/quick_start/pricing",
+        },
+      ],
+    },
+    {
+      id: "deepseek-flash",
+      name: "DeepSeek Flash",
+      family: "deepseek",
+      priceInput: 0.15,
+      priceCachedInput: 0.003,
+      priceOutput: 0.6,
+      priceNote:
+        "Serves DeepSeek-V4.1-Flash. Off-peak rates; peak is 2×.",
       sources: [
         {
           label: "DeepSeek API pricing",
@@ -249,28 +345,38 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
       sources: [{ label: "Qwen", url: "https://qwen.ai" }],
     },
     {
-      id: "kimi-k2.5",
-      name: "Kimi K2.5",
+      id: "kimi-k3",
+      name: "Kimi K3",
       family: "moonshot",
-      priceInput: 0.6,
-      priceCachedInput: 0.15,
-      priceOutput: 3,
+      priceInput: 3,
+      priceCachedInput: 0.3,
+      priceOutput: 15,
+      priceNote:
+        "Cache writes billed separately ($3 / 5m TTL, $6 / 1h TTL per 1M).",
       sources: [
         {
-          label: "Kimi K2.5 API pricing",
-          url: "https://platform.kimi.ai/docs/pricing/chat-k25",
+          label: "Kimi API pricing",
+          url: "https://platform.kimi.ai/docs/pricing",
+        },
+        {
+          label: "Context caching",
+          url: "https://platform.kimi.ai/docs/guide/context-caching",
         },
       ],
     },
     {
-      id: "mistral-large-3",
-      name: "Mistral Large 3",
+      id: "mistral-large-4",
+      name: "Mistral Large 4",
       family: "mistral",
-      priceInput: 0.5,
-      priceOutput: 1.5,
+      priceInput: 1.36,
+      priceCachedInput: 0.14,
+      priceOutput: 4.18,
       priceNote: "La Plateforme list price; resellers may differ.",
       sources: [
-        { label: "Mistral AI pricing", url: "https://mistral.ai/pricing" },
+        {
+          label: "Mistral AI pricing",
+          url: "https://docs.mistral.ai/inference/pricing",
+        },
       ],
     },
   ],
@@ -278,6 +384,31 @@ export const PRICING_SNAPSHOT: PricingSnapshot = {
 
 export function getModel(id: string): ModelPricing | undefined {
   return PRICING_SNAPSHOT.models.find((m) => m.id === id);
+}
+
+/** Build a ModelPricing row from user-entered custom rates. */
+export function customModelFromPricing(
+  pricing: CustomModelPricing,
+): ModelPricing {
+  return {
+    id: CUSTOM_MODEL_ID,
+    name: "Custom",
+    family: "custom",
+    priceInput: pricing.priceInput,
+    priceCachedInput: pricing.priceCachedInput,
+    priceOutput: pricing.priceOutput,
+    sources: [],
+    priceNote: "Rates you entered — not from the Looking Glass snapshot.",
+  };
+}
+
+/** Resolve snapshot or custom pricing for a scenario. */
+export function resolveModel(scenario: CostScenario): ModelPricing | undefined {
+  if (scenario.modelId === CUSTOM_MODEL_ID) {
+    if (!scenario.customPricing) return undefined;
+    return customModelFromPricing(scenario.customPricing);
+  }
+  return getModel(scenario.modelId);
 }
 
 export function textToTokens(text: TextInput): number {
@@ -326,16 +457,64 @@ export function usdForTokens(tokens: number, pricePerMillion: number): number {
 }
 
 export function calculateCost(scenario: CostScenario): CostResult {
-  const model = getModel(scenario.modelId);
+  const model = resolveModel(scenario);
   if (!model) {
+    if (scenario.modelId === CUSTOM_MODEL_ID) {
+      throw new Error("customPricing is required for a custom model.");
+    }
     throw new Error(`Unknown model: ${scenario.modelId}`);
   }
 
-  const notes: string[] = [];
-  const parts = modalityTokens(scenario);
-  const output = Math.max(0, scenario.outputTokens);
+  // Clamp again so direct callers (and stale UI state) stay bounded.
+  const capped: CostScenario = {
+    ...scenario,
+    text: scenario.text
+      ? clampTextInput(scenario.text)
+      : undefined,
+    images: scenario.images
+      ? {
+          ...scenario.images,
+          count: clamp(scenario.images.count, 0, SCENARIO_LIMITS.images),
+        }
+      : undefined,
+    audioSeconds:
+      scenario.audioSeconds != null
+        ? clamp(scenario.audioSeconds, 0, SCENARIO_LIMITS.audioSeconds)
+        : undefined,
+    video: scenario.video
+      ? {
+          ...scenario.video,
+          seconds: clamp(
+            scenario.video.seconds,
+            0,
+            SCENARIO_LIMITS.videoSeconds,
+          ),
+        }
+      : undefined,
+    cacheHitPercent:
+      scenario.cacheHitPercent != null
+        ? clamp(scenario.cacheHitPercent, 0, SCENARIO_LIMITS.cacheHitPercent)
+        : undefined,
+    outputTokens: clamp(
+      scenario.outputTokens,
+      0,
+      SCENARIO_LIMITS.outputTokens,
+    ),
+    requestsPerDay:
+      scenario.requestsPerDay != null
+        ? clamp(scenario.requestsPerDay, 0, SCENARIO_LIMITS.requestsPerDay)
+        : undefined,
+    users:
+      scenario.users != null
+        ? clamp(scenario.users, 1, SCENARIO_LIMITS.users)
+        : undefined,
+  };
 
-  const cachePct = clamp(scenario.cacheHitPercent ?? 0, 0, 100) / 100;
+  const notes: string[] = [];
+  const parts = modalityTokens(capped);
+  const output = capped.outputTokens;
+
+  const cachePct = (capped.cacheHitPercent ?? 0) / 100;
   let cachedText = parts.text * cachePct;
   let uncachedText = parts.text - cachedText;
 
@@ -380,8 +559,8 @@ export function calculateCost(scenario: CostScenario): CostResult {
     perRequestUsd,
   };
 
-  const requestsPerDay = scenario.requestsPerDay ?? 0;
-  const users = scenario.users ?? 1;
+  const requestsPerDay = capped.requestsPerDay ?? 0;
+  const users = capped.users ?? 1;
   let monthly: CostResult["monthly"];
   if (requestsPerDay > 0) {
     const requests = requestsPerDay * users * 30;
@@ -402,6 +581,26 @@ function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 
+function clampTextInput(text: TextInput): TextInput {
+  switch (text.mode) {
+    case "tokens":
+      return {
+        mode: "tokens",
+        tokens: clamp(text.tokens, 0, SCENARIO_LIMITS.tokens),
+      };
+    case "words":
+      return {
+        mode: "words",
+        words: clamp(text.words, 0, SCENARIO_LIMITS.words),
+      };
+    case "chars":
+      return {
+        mode: "chars",
+        chars: clamp(text.chars, 0, SCENARIO_LIMITS.chars),
+      };
+  }
+}
+
 /** Coerce a POST body into a CostScenario or return an error string. */
 export function parseCostScenario(
   body: unknown,
@@ -414,18 +613,38 @@ export function parseCostScenario(
   if (typeof b.modelId !== "string" || !b.modelId.trim()) {
     return { ok: false, error: "modelId is required." };
   }
-  if (!getModel(b.modelId)) {
+  const isCustom = b.modelId === CUSTOM_MODEL_ID;
+  if (!isCustom && !getModel(b.modelId)) {
     return { ok: false, error: `Unknown modelId: ${b.modelId}` };
   }
 
-  const outputTokens = asNonNegNumber(b.outputTokens, "outputTokens");
+  let customPricing: CustomModelPricing | undefined;
+  if (isCustom) {
+    const parsedCustom = parseCustomPricing(b.customPricing);
+    if (!parsedCustom.ok) return parsedCustom;
+    customPricing = parsedCustom.value;
+  } else if (b.customPricing != null) {
+    return {
+      ok: false,
+      error: "customPricing is only valid when modelId is \"custom\".",
+    };
+  }
+
+  const outputTokens = asBoundedNumber(
+    b.outputTokens,
+    SCENARIO_LIMITS.outputTokens,
+  );
   if (outputTokens == null) {
-    return { ok: false, error: "outputTokens must be a non-negative number." };
+    return {
+      ok: false,
+      error: `outputTokens must be between 0 and ${SCENARIO_LIMITS.outputTokens.toLocaleString("en-US")}.`,
+    };
   }
 
   const scenario: CostScenario = {
     modelId: b.modelId,
     outputTokens,
+    ...(customPricing ? { customPricing } : {}),
   };
 
   if (b.text != null) {
@@ -439,9 +658,12 @@ export function parseCostScenario(
       return { ok: false, error: "images must be an object." };
     }
     const img = b.images as Record<string, unknown>;
-    const count = asNonNegNumber(img.count, "images.count");
+    const count = asBoundedNumber(img.count, SCENARIO_LIMITS.images);
     if (count == null) {
-      return { ok: false, error: "images.count must be a non-negative number." };
+      return {
+        ok: false,
+        error: `images.count must be between 0 and ${SCENARIO_LIMITS.images}.`,
+      };
     }
     const size = img.size;
     if (size !== "small" && size !== "medium" && size !== "large") {
@@ -454,9 +676,12 @@ export function parseCostScenario(
   }
 
   if (b.audioSeconds != null) {
-    const audio = asNonNegNumber(b.audioSeconds, "audioSeconds");
+    const audio = asBoundedNumber(b.audioSeconds, SCENARIO_LIMITS.audioSeconds);
     if (audio == null) {
-      return { ok: false, error: "audioSeconds must be a non-negative number." };
+      return {
+        ok: false,
+        error: `audioSeconds must be between 0 and ${SCENARIO_LIMITS.audioSeconds.toLocaleString("en-US")}.`,
+      };
     }
     scenario.audioSeconds = audio;
   }
@@ -466,11 +691,11 @@ export function parseCostScenario(
       return { ok: false, error: "video must be an object." };
     }
     const v = b.video as Record<string, unknown>;
-    const seconds = asNonNegNumber(v.seconds, "video.seconds");
+    const seconds = asBoundedNumber(v.seconds, SCENARIO_LIMITS.videoSeconds);
     if (seconds == null) {
       return {
         ok: false,
-        error: "video.seconds must be a non-negative number.",
+        error: `video.seconds must be between 0 and ${SCENARIO_LIMITS.videoSeconds.toLocaleString("en-US")}.`,
       };
     }
     const format = v.format;
@@ -484,8 +709,11 @@ export function parseCostScenario(
   }
 
   if (b.cacheHitPercent != null) {
-    const pct = asNonNegNumber(b.cacheHitPercent, "cacheHitPercent");
-    if (pct == null || pct > 100) {
+    const pct = asBoundedNumber(
+      b.cacheHitPercent,
+      SCENARIO_LIMITS.cacheHitPercent,
+    );
+    if (pct == null) {
       return {
         ok: false,
         error: "cacheHitPercent must be a number between 0 and 100.",
@@ -495,20 +723,26 @@ export function parseCostScenario(
   }
 
   if (b.requestsPerDay != null) {
-    const r = asNonNegNumber(b.requestsPerDay, "requestsPerDay");
+    const r = asBoundedNumber(
+      b.requestsPerDay,
+      SCENARIO_LIMITS.requestsPerDay,
+    );
     if (r == null) {
       return {
         ok: false,
-        error: "requestsPerDay must be a non-negative number.",
+        error: `requestsPerDay must be between 0 and ${SCENARIO_LIMITS.requestsPerDay.toLocaleString("en-US")}.`,
       };
     }
     scenario.requestsPerDay = r;
   }
 
   if (b.users != null) {
-    const u = asNonNegNumber(b.users, "users");
+    const u = asBoundedNumber(b.users, SCENARIO_LIMITS.users);
     if (u == null || u < 1) {
-      return { ok: false, error: "users must be a number ≥ 1." };
+      return {
+        ok: false,
+        error: `users must be between 1 and ${SCENARIO_LIMITS.users.toLocaleString("en-US")}.`,
+      };
     }
     scenario.users = u;
   }
@@ -526,23 +760,32 @@ function parseTextInput(
   }
   const t = raw as Record<string, unknown>;
   if (t.mode === "tokens") {
-    const tokens = asNonNegNumber(t.tokens, "text.tokens");
+    const tokens = asBoundedNumber(t.tokens, SCENARIO_LIMITS.tokens);
     if (tokens == null) {
-      return { ok: false, error: "text.tokens must be a non-negative number." };
+      return {
+        ok: false,
+        error: `text.tokens must be between 0 and ${SCENARIO_LIMITS.tokens.toLocaleString("en-US")}.`,
+      };
     }
     return { ok: true, value: { mode: "tokens", tokens } };
   }
   if (t.mode === "words") {
-    const words = asNonNegNumber(t.words, "text.words");
+    const words = asBoundedNumber(t.words, SCENARIO_LIMITS.words);
     if (words == null) {
-      return { ok: false, error: "text.words must be a non-negative number." };
+      return {
+        ok: false,
+        error: `text.words must be between 0 and ${SCENARIO_LIMITS.words.toLocaleString("en-US")}.`,
+      };
     }
     return { ok: true, value: { mode: "words", words } };
   }
   if (t.mode === "chars") {
-    const chars = asNonNegNumber(t.chars, "text.chars");
+    const chars = asBoundedNumber(t.chars, SCENARIO_LIMITS.chars);
     if (chars == null) {
-      return { ok: false, error: "text.chars must be a non-negative number." };
+      return {
+        ok: false,
+        error: `text.chars must be between 0 and ${SCENARIO_LIMITS.chars.toLocaleString("en-US")}.`,
+      };
     }
     return { ok: true, value: { mode: "chars", chars } };
   }
@@ -552,16 +795,74 @@ function parseTextInput(
   };
 }
 
-function asNonNegNumber(v: unknown, _label: string): number | null {
-  if (typeof v !== "number" || !Number.isFinite(v) || v < 0) return null;
+/** Finite, non-negative, and ≤ max. */
+function asBoundedNumber(v: unknown, max: number): number | null {
+  if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > max) {
+    return null;
+  }
   return v;
 }
 
+function parseCustomPricing(
+  raw: unknown,
+):
+  | { ok: true; value: CustomModelPricing }
+  | { ok: false; error: string } {
+  if (raw == null) {
+    return {
+      ok: false,
+      error: "customPricing is required when modelId is \"custom\".",
+    };
+  }
+  if (typeof raw !== "object") {
+    return { ok: false, error: "customPricing must be an object." };
+  }
+  const c = raw as Record<string, unknown>;
+  const priceInput = asBoundedNumber(c.priceInput, SCENARIO_LIMITS.pricePerMillion);
+  if (priceInput == null) {
+    return {
+      ok: false,
+      error: `customPricing.priceInput must be between 0 and ${SCENARIO_LIMITS.pricePerMillion.toLocaleString("en-US")}.`,
+    };
+  }
+  const priceOutput = asBoundedNumber(
+    c.priceOutput,
+    SCENARIO_LIMITS.pricePerMillion,
+  );
+  if (priceOutput == null) {
+    return {
+      ok: false,
+      error: `customPricing.priceOutput must be between 0 and ${SCENARIO_LIMITS.pricePerMillion.toLocaleString("en-US")}.`,
+    };
+  }
+  const value: CustomModelPricing = { priceInput, priceOutput };
+  if (c.priceCachedInput != null) {
+    const cached = asBoundedNumber(
+      c.priceCachedInput,
+      SCENARIO_LIMITS.pricePerMillion,
+    );
+    if (cached == null) {
+      return {
+        ok: false,
+        error: `customPricing.priceCachedInput must be between 0 and ${SCENARIO_LIMITS.pricePerMillion.toLocaleString("en-US")}.`,
+      };
+    }
+    value.priceCachedInput = cached;
+  }
+  return { ok: true, value };
+}
+
 export function formatCostUsd(n: number): string {
-  if (n === 0) return "$0";
+  if (!Number.isFinite(n) || n === 0) return "$0";
   if (n < 0.0001) return `$${n.toExponential(2)}`;
   if (n < 0.01) return `$${n.toFixed(4)}`;
   if (n < 1) return `$${n.toFixed(3)}`;
   if (n < 100) return `$${n.toFixed(2)}`;
-  return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  if (n < 1_000_000) {
+    return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  }
+  if (n < 1_000_000_000) {
+    return `$${(n / 1_000_000).toFixed(n < 10_000_000 ? 2 : 1)}M`;
+  }
+  return `$${(n / 1_000_000_000).toFixed(2)}B`;
 }
