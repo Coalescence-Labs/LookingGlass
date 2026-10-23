@@ -76,23 +76,21 @@ export default function TokenCostPage() {
       </section>
 
       {/* ——— Calculator ——— */}
-      <section className="shell pb-16 md:pb-20">
+      <section className="shell pb-24 md:pb-32">
         <Reveal>
-          <div className="flex items-end justify-between border-b border-line pb-4">
+          <div className="flex items-end justify-between border-b border-line pb-6">
             <div className="flex items-baseline gap-4">
               <span className="type-mono-sm">§ I</span>
               <h2 className="type-heading text-bone">Work the numbers</h2>
             </div>
-            <span className="type-mono-sm text-dim">
-              Backend · /api/token-cost
-            </span>
           </div>
         </Reveal>
 
         <Reveal delay={0.08}>
-          <p className="mt-5 type-body max-w-2xl text-bone-3">
-            Start from a preset, then nudge until the monthly line feels honest.
-            Scale reference:{" "}
+          <p className="mt-8 type-lede max-w-2xl">
+            Start from a preset that looks like the app you are building, then
+            nudge input and output until the monthly line feels honest. For a
+            sense of how big a million tokens <em>is</em>, see{" "}
             <Link
               href="/one-million-tokens"
               className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
@@ -104,7 +102,7 @@ export default function TokenCostPage() {
         </Reveal>
 
         <Reveal delay={0.12}>
-          <div className="mt-5">
+          <div className="mt-8">
             <Calculator />
           </div>
         </Reveal>

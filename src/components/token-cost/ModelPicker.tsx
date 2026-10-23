@@ -17,10 +17,21 @@ const FAMILY_LABEL: Record<ModelPricing["family"], string> = {
   mistral: "Mistral",
 };
 
+const FAMILY_ORDER: ModelPricing["family"][] = [
+  "anthropic",
+  "openai",
+  "google",
+  "deepseek",
+  "meta",
+  "qwen",
+  "moonshot",
+  "mistral",
+];
+
 function rateLine(m: ModelPricing): string {
   const cache =
     m.priceCachedInput != null ? ` · cache $${m.priceCachedInput}` : "";
-  return `$${m.priceInput}${cache} · $${m.priceOutput} / 1M`;
+  return `$${m.priceInput}${cache} · $${m.priceOutput}`;
 }
 
 type Props = {
@@ -52,14 +63,10 @@ export function ModelPicker({ value, onChange }: Props) {
     };
   }, [open]);
 
-  // Group models by family for scanability
-  const groups = PRICING_SNAPSHOT.models.reduce(
-    (acc, m) => {
-      (acc[m.family] ??= []).push(m);
-      return acc;
-    },
-    {} as Partial<Record<ModelPricing["family"], ModelPricing[]>>,
-  );
+  const groups = FAMILY_ORDER.map((family) => ({
+    family,
+    models: PRICING_SNAPSHOT.models.filter((m) => m.family === family),
+  })).filter((g) => g.models.length > 0);
 
   return (
     <div ref={rootRef} className="relative">
@@ -70,21 +77,22 @@ export function ModelPicker({ value, onChange }: Props) {
         aria-expanded={open}
         aria-controls={`${uid}-list`}
         onClick={() => setOpen((o) => !o)}
-        className="group flex w-full items-center justify-between gap-3 border border-line bg-ink-3 px-3 py-2.5 text-left transition-colors hover:border-line-2 hover:bg-ink-4 focus-visible:border-accent"
+        className="group flex w-full items-end justify-between gap-4 border-b border-line pb-3 text-left transition-colors hover:border-line-2"
       >
         <span className="min-w-0">
-          <span className="block truncate font-serif text-[1.05rem] text-bone leading-tight">
+          <span className="block truncate font-serif text-[1.35rem] leading-none text-bone md:text-[1.5rem]">
             {selected.name}
           </span>
-          <span className="mt-0.5 block type-mono-sm text-dim truncate">
+          <span className="mt-2 block type-mono-sm text-dim">
             {FAMILY_LABEL[selected.family]} · {rateLine(selected)}
+            <span className="text-muted"> / 1M</span>
           </span>
         </span>
         <span
-          className="type-mono-sm text-muted transition-colors group-hover:text-accent"
+          className="mb-0.5 type-mono-sm text-muted transition-colors group-hover:text-accent"
           aria-hidden
         >
-          {open ? "▴" : "▾"}
+          {open ? "Close" : "Change"}
         </span>
       </button>
 
@@ -93,15 +101,15 @@ export function ModelPicker({ value, onChange }: Props) {
           id={`${uid}-list`}
           role="listbox"
           aria-labelledby={uid}
-          className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto border border-line-2 bg-ink-2 shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+          className="absolute left-0 right-0 z-20 mt-0 max-h-80 overflow-y-auto border border-line bg-ink-2"
         >
-          {(Object.keys(groups) as ModelPricing["family"][]).map((family) => (
+          {groups.map(({ family, models }) => (
             <li key={family} role="presentation">
-              <div className="sticky top-0 border-b border-line bg-ink-3 px-3 py-1.5 type-mono-sm text-dim">
+              <div className="sticky top-0 border-b border-line bg-ink-3/95 px-4 py-2 type-mono-sm text-dim backdrop-blur-sm">
                 {FAMILY_LABEL[family]}
               </div>
               <ul role="group" aria-label={FAMILY_LABEL[family]}>
-                {groups[family]!.map((m) => {
+                {models.map((m) => {
                   const on = m.id === selected.id;
                   return (
                     <li key={m.id} role="option" aria-selected={on}>
@@ -111,26 +119,25 @@ export function ModelPicker({ value, onChange }: Props) {
                           onChange(m.id);
                           setOpen(false);
                         }}
-                        className={`flex w-full items-baseline justify-between gap-3 px-3 py-2.5 text-left transition-colors hover:bg-accent-soft ${
-                          on ? "bg-glass" : ""
+                        className={`grid w-full grid-cols-[1fr_auto] items-baseline gap-4 border-b border-line px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-glass ${
+                          on ? "bg-accent-soft/40" : ""
                         }`}
                       >
-                        <span className="min-w-0">
+                        <span>
                           <span
-                            className={`block truncate text-[0.95rem] ${
+                            className={`block font-serif text-[1.1rem] leading-tight ${
                               on ? "text-accent" : "text-bone"
                             }`}
                           >
                             {m.name}
                           </span>
-                          <span className="mt-0.5 block type-mono-sm text-dim">
+                          <span className="mt-1 block type-mono-sm text-dim">
                             {rateLine(m)}
+                            <span className="text-muted"> / 1M</span>
                           </span>
                         </span>
                         {on ? (
-                          <span className="type-mono-sm text-accent" aria-hidden>
-                            ●
-                          </span>
+                          <span className="type-mono-sm text-accent">Selected</span>
                         ) : null}
                       </button>
                     </li>
