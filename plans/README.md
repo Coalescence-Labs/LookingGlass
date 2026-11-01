@@ -96,6 +96,12 @@ Or run each skill separately:
 - [`concepts/attention-mechanism.md`](concepts/attention-mechanism.md) — Series I continuation.
 - [`concepts/mesh-networks.md`](concepts/mesh-networks.md) — mesh routing today + speculative post-stack rebuild.
 - [`concepts/rendering-levels.md`](concepts/rendering-levels.md) — raytracing from pinhole to Blender, taught in unlockable levels.
+- [`concepts/crt-television.md`](concepts/crt-television.md) — one electron beam, raster scan, phosphor persistence.
+- [`concepts/gps.md`](concepts/gps.md) — trilateration, atomic clocks, relativity corrections.
+- [`concepts/diffusion-models.md`](concepts/diffusion-models.md) — forward noising, reverse denoising, step-by-step image generation.
+- [`concepts/public-key-encryption.md`](concepts/public-key-encryption.md) — key pairs, TLS handshake, toy encrypt/decrypt demo.
+- [`concepts/qr-codes.md`](concepts/qr-codes.md) — module grid, Reed–Solomon error correction.
+- [`concepts/noise-cancellation.md`](concepts/noise-cancellation.md) — destructive interference, feedforward/feedback ANC.
 - [`concepts/engagement-signals.md`](concepts/engagement-signals.md) — how a social feed measures, pipelines, and ranks its user.
 - [`concepts/git-internals.md`](concepts/git-internals.md) — git as a content-addressable filesystem, taught in unlockable levels.
 
@@ -104,7 +110,7 @@ Or run each skill separately:
 - [`research/accessibility-audit.md`](research/accessibility-audit.md) — one-time a11y sweep.
 
 ### Engineering
-- [`engineering/security-review.md`](engineering/security-review.md) — threat-model the submission pipeline and public surface.
+- [`engineering/security-review.md`](engineering/security-review.md) — threat-model the submission pipeline (findings in Ergon, not `research/`).
 - [`engineering/privacy-first-analytics.md`](engineering/privacy-first-analytics.md) — add cookieless analytics.
 - [`engineering/structured-logging.md`](engineering/structured-logging.md) — API route + client events.
 - [`engineering/og-images.md`](engineering/og-images.md) — per-page Open Graph cards.
