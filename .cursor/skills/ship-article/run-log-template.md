@@ -1,79 +1,55 @@
-# Run log template (`ship/<slug>/run-YYYY-MM-DD.md`)
-
-```yaml
 ---
-topic: <Article title>
-slug: <slug>
-plan: plans/concepts/<slug>.md
-linear-id: COA-42
-linear-url: https://linear.app/…
+slug: example-slug
 date: YYYY-MM-DD
-agent: cursor | claude-code | human
-branch: plan/<slug>
-status: in-progress | pr-open | merged
-pr-url: 
-pr-number: 
-head-sha: 
-review-verdict: approve | approve-with-nits | request-changes
+agent: cursor
+ergon-id: COA-42
+ergon-url: https://ergon.coalescencelabs.app/issue/COA-42
+plan: plans/concepts/example-slug.md
+branch: plan/example-slug
+status: in-progress
 ---
-```
 
-## Summary
+# Ship run — example-slug
 
-≤ 100 words. What shipped, PR link, waiting on maintainer manual review.
-
-## Phase log
-
-| Phase | Skill / action | Status | Commit | Pushed | Notes |
-|-------|----------------|--------|--------|--------|-------|
-| 0 | Resolve topic | ✅ | — | — | slug from COA-42 |
-| 1 | Linear + git setup | ✅ | abc1234 | ✅ | In Progress |
-| 2 | article-research | ✅ | def5678 | ✅ | 6 chunks |
-| 3 | article-design | ✅ | | ✅ | |
-| 4 | Implement | ✅ | | ✅ | lint/build/test pass |
-| 5 | article-humanize | ✅ | | ✅ | |
-| 6 | article-review | ✅ | | ✅ | Approve with nits |
-| 7 | PR opened | ✅ | | ✅ | #NNN |
-| 8 | Linear updated | ✅ | | ✅ | In Review + comment |
-| 9 | Handoff | ✅ | | — | |
-
-## Linear history
-
-| When | Action | State |
-|------|--------|-------|
-| start | update_issue | In Progress |
-| PR open | create_comment | (PR link) |
-| PR open | update_issue | In Review |
-
-## Artifacts
-
-| Path | Status |
-|------|--------|
-| `research/<slug>/` | complete |
-| `design/<slug>/` | complete |
-| `humanize/<slug>/` | complete |
-| `reviews/<slug>/` | complete |
-| `src/app/<slug>/` | complete |
-
-## Verification commands
-
-```text
-bun run lint  → exit 0 @ <sha>
-bun run build → exit 0 @ <sha>
-bun test      → exit 0 @ <sha>
-```
-
-## Open items for maintainer
-
-- Nits from review (non-blocking)
-- Manual copy/visual adjustments on PR branch
-
-## Merged
-
-*(Maintainer fills after merge.)*
+## Meta
 
 ```
-- YYYY-MM-DD · PR #NNN merged to develop
-- Plan status → done
-- Linear → Done
+ergon: mcp | manual
 ```
+
+## Phases
+
+| # | Phase | Status | Commit | Pushed | Notes |
+|---|-------|--------|--------|--------|-------|
+| 0 | Resolve topic | ✅ | | | slug from plan / Ergon |
+| 1 | Ergon + git setup | ✅ | abc1234 | ✅ | In Progress |
+| 2 | Research | | | | |
+| 3 | Design | | | | |
+| 4 | Implement | | | | |
+| 5 | Humanize | | | | |
+| 6 | Review | | | | |
+| 7 | Open PR | | | | |
+| 8 | Ergon updated | ✅ | | ✅ | In Review + walkable handoff |
+| 9 | Chat handoff | | | | |
+
+## Ergon history
+
+- YYYY-MM-DD — fetched `COA-42`
+- YYYY-MM-DD — state → In Progress
+- YYYY-MM-DD — state → In Review; PR + preview linked
+
+## PR
+
+- URL:
+- Preview (deep link):
+- Head SHA:
+
+## Review verdict
+
+Approve | Approve with nits | Request changes
+
+## Maintainer next
+
+- Walk preview at `/<slug>`
+- Review / merge PR
+- Ergon → Done

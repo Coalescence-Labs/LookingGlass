@@ -1,10 +1,10 @@
 ---
 title: Concept — How noise-cancelling headphones work
-status: not-started
+status: in-progress
 category: concept
 effort: M
 series: "III — Everyday machines"
-last-updated: 2026-06-17
+last-updated: 2026-11-01
 ---
 
 ## Context

@@ -10,8 +10,8 @@ One folder per article slug; each run adds a dated log:
 
 ```
 ship/<slug>/
-  run-YYYY-MM-DD.md    # phases completed, commits, PR URL, Linear issue
+  run-YYYY-MM-DD.md    # phases completed, commits, PR URL, Ergon issue
 ```
 
-The maintainer merges the PR manually; after merge, update the run log and
-Linear issue to done.
+Issue tracking is **Ergon** (not Linear). The maintainer merges the PR
+manually; after merge, update the run log and mark the Ergon issue **Done**.
