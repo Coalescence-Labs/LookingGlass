@@ -102,6 +102,8 @@ Or run each skill separately:
 - [`concepts/public-key-encryption.md`](concepts/public-key-encryption.md) — key pairs, TLS handshake, toy encrypt/decrypt demo.
 - [`concepts/qr-codes.md`](concepts/qr-codes.md) — module grid, Reed–Solomon error correction.
 - [`concepts/noise-cancellation.md`](concepts/noise-cancellation.md) — destructive interference, feedforward/feedback ANC.
+- [`concepts/engagement-signals.md`](concepts/engagement-signals.md) — how a social feed measures, pipelines, and ranks its user.
+- [`concepts/git-internals.md`](concepts/git-internals.md) — git as a content-addressable filesystem, taught in unlockable levels.
 
 ### Research
 - [`research/model-roster-refresh.md`](research/model-roster-refresh.md) — keep Concept 02 current.
