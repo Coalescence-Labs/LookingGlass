@@ -11,6 +11,7 @@ const pageModules: Record<string, () => Promise<Record<string, unknown>>> = {
   "context-window": () => import("./context-window/page"),
   "token-cost": () => import("./token-cost/page"),
   "solar-life-cycle": () => import("./solar-life-cycle/page"),
+  "noise-cancellation": () => import("./noise-cancellation/page"),
 };
 
 describe("page modules", () => {
