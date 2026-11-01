@@ -21,7 +21,7 @@ export default function TokenCostPage() {
   return (
     <>
       <PageHeader
-        index="08"
+        index="09"
         kicker="On cost"
         title="What does a token actually cost?"
         lede="A rate card tells you the price of a million tokens. It does not tell you what your app will spend. This calculator turns a request shape — text, images, audio, video, cache hits, output budget — into dollars per call and per month."

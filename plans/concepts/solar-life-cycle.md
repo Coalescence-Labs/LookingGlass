@@ -1,10 +1,10 @@
 ---
 title: Concept 04 — Solar life cycle
-status: not-started
+status: in-progress
 category: concept
 effort: L
 series: "II — Mechanisms of the world"
-last-updated: 2026-04-17
+last-updated: 2026-04-20
 ---
 
 ## Context
@@ -78,7 +78,8 @@ one visual that makes the timescale felt (not just stated).
 ## References
 
 - NASA Sun Fact Sheet — https://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
-- Iben, "Single and binary star evolution" (1991) — ApJS 76, 55.
-- Schaller et al., "New grids of stellar models" (1992) — A&AS 96, 269.
+- Iben, *Stellar Evolution Physics* (Cambridge Univ. Press, 2012) — replaces the earlier ApJS 76 (1991) pointer; the 2012 book is the fuller treatment referenced in the research notebook.
+- Christensen-Dalsgaard, *Stellar Structure and Evolution* (Aarhus lecture notes, 2008).
+- Schaller et al., "New grids of stellar models" (1992) — A&AS 96, 269. (Numbers proxied from NASA + Christensen-Dalsgaard where Schaller table access is unavailable; cells flagged in `solar.ts`.)
 - Internal: `src/app/one-million-tokens/page.tsx` (page rhythm).
 - Internal: `src/components/motion/Reveal.tsx` (motion pattern).
