@@ -9,6 +9,8 @@ const pageModules: Record<string, () => Promise<Record<string, unknown>>> = {
   "one-million-tokens": () => import("./one-million-tokens/page"),
   "model-comparison": () => import("./model-comparison/page"),
   "context-window": () => import("./context-window/page"),
+  "token-cost": () => import("./token-cost/page"),
+  "solar-life-cycle": () => import("./solar-life-cycle/page"),
 };
 
 describe("page modules", () => {
