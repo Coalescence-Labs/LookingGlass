@@ -79,4 +79,4 @@ Nothing sensitive (idea text, email address) is logged.
 
 ## Applied
 
-- 2026-04-18 · `src/lib/log.ts`, `src/app/api/submit/route.ts`, `src/lib/log.test.ts`, `scripts/verify-submit-logs.sh`, `research/security-review.md` (IP logging open question), `package.json` `test` script.
+- 2026-04-18 · `src/lib/log.ts`, `src/app/api/submit/route.ts`, `src/lib/log.test.ts`, `scripts/verify-submit-logs.sh`, `package.json` `test` script. IP logging retention follow-up lives in Ergon (COA-467), not in-repo research notes.
