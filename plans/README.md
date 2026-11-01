@@ -110,7 +110,7 @@ Or run each skill separately:
 - [`research/accessibility-audit.md`](research/accessibility-audit.md) — one-time a11y sweep.
 
 ### Engineering
-- [`engineering/security-review.md`](engineering/security-review.md) — threat-model the submission pipeline and public surface.
+- [`engineering/security-review.md`](engineering/security-review.md) — threat-model the submission pipeline (findings in Ergon, not `research/`).
 - [`engineering/privacy-first-analytics.md`](engineering/privacy-first-analytics.md) — add cookieless analytics.
 - [`engineering/structured-logging.md`](engineering/structured-logging.md) — API route + client events.
 - [`engineering/og-images.md`](engineering/og-images.md) — per-page Open Graph cards.
