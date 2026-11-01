@@ -34,7 +34,7 @@ export type ModelSpec = {
   priceNote?: string;
 };
 
-export const VERIFIED_DATE = "2026-04-17";
+export const VERIFIED_DATE = "2026-04-18";
 
 export const MODELS: ModelSpec[] = [
   // ——— Anthropic ———
@@ -99,7 +99,7 @@ export const MODELS: ModelSpec[] = [
     priceOutput: 5,
     released: "2025-10",
     contextTokens: 200_000,
-    capabilities: ["vision", "tools"],
+    capabilities: ["vision", "tools", "reasoning"],
     blurb:
       "Anthropic's small/fast tier — cheap enough to run on every user interaction.",
     bestFor:
@@ -201,10 +201,10 @@ export const MODELS: ModelSpec[] = [
     name: "DeepSeek V3.2",
     family: "deepseek",
     category: "open",
-    priceInput: 0.14,
-    priceOutput: 0.28,
+    priceInput: 0.28,
+    priceOutput: 0.42,
     released: "2026-01",
-    contextTokens: 160_000,
+    contextTokens: 128_000,
     capabilities: ["tools", "reasoning"],
     blurb:
       "DeepSeek's reasoning-first MoE (671B total / 37B active) — remarkable quality for the price.",
@@ -217,8 +217,8 @@ export const MODELS: ModelSpec[] = [
     sources: [
       { label: "DeepSeek", url: "https://www.deepseek.com" },
       {
-        label: "DeepSeek API docs",
-        url: "https://api-docs.deepseek.com/",
+        label: "DeepSeek API — models & pricing",
+        url: "https://api-docs.deepseek.com/quick_start/pricing",
       },
     ],
   },
@@ -270,7 +270,7 @@ export const MODELS: ModelSpec[] = [
     family: "moonshot",
     category: "open",
     priceInput: 0.6,
-    priceOutput: 2.5,
+    priceOutput: 3,
     released: "2026-01",
     contextTokens: 256_000,
     capabilities: ["vision", "tools", "reasoning"],
@@ -286,8 +286,8 @@ export const MODELS: ModelSpec[] = [
     sources: [
       { label: "Moonshot AI", url: "https://www.moonshot.ai" },
       {
-        label: "Kimi platform pricing",
-        url: "https://platform.moonshot.ai/",
+        label: "Kimi K2.5 API pricing",
+        url: "https://platform.kimi.ai/docs/pricing/chat-k25",
       },
     ],
   },
@@ -295,8 +295,8 @@ export const MODELS: ModelSpec[] = [
     name: "Mistral Large 3",
     family: "mistral",
     category: "open",
-    priceInput: 2,
-    priceOutput: 6,
+    priceInput: 0.5,
+    priceOutput: 1.5,
     released: "2025-12",
     contextTokens: 256_000,
     capabilities: ["vision", "tools", "reasoning"],
@@ -305,10 +305,14 @@ export const MODELS: ModelSpec[] = [
     bestFor:
       "EU deployments with data-residency requirements and mixed open/closed stacks.",
     watchFor:
-      "Quoted API prices vary widely across sources; confirm the current rate with Mistral directly before committing.",
+      "Sparse MoE at 675B total — latency and VRAM needs can bite on self-hosted runs despite the low token price.",
     priceNote:
-      "Pricing on Mistral's own La Plateforme differs from some resellers; rates shown are the primary listing.",
+      "Pricing on Mistral's own La Plateforme differs from some resellers; rates shown are the model-card listing.",
     sources: [
+      {
+        label: "Mistral Large 3 model card",
+        url: "https://docs.mistral.ai/models/model-cards/mistral-large-3-25-12",
+      },
       { label: "Mistral AI pricing", url: "https://mistral.ai/pricing" },
     ],
   },

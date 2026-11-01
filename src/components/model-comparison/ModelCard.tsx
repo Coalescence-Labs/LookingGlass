@@ -5,6 +5,7 @@ import {
   formatUSD,
 } from "@/lib/model-compare";
 import { FAMILY_LABEL, formatTokensShort } from "@/lib/context-window";
+import { SourceOutboundLink } from "@/components/site/SourceOutboundLink";
 
 type Props = {
   model: ModelSpec;
@@ -109,15 +110,13 @@ export function ModelCard({ model: m }: Props) {
 
       <footer className="mt-auto pt-6 flex flex-wrap gap-x-4 gap-y-1">
         {m.sources.map((s) => (
-          <a
+          <SourceOutboundLink
             key={s.url}
             href={s.url}
-            target="_blank"
-            rel="noreferrer"
             className="type-mono-sm text-bone-3 transition-colors hover:text-accent"
           >
             {s.label} ↗
-          </a>
+          </SourceOutboundLink>
         ))}
       </footer>
     </article>

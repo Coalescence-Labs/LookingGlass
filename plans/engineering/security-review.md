@@ -1,9 +1,9 @@
 ---
 title: Engineering — Security review of public surface
-status: in-progress
+status: done
 category: engineering
 effort: M
-last-updated: 2026-04-18
+last-updated: 2026-11-01
 ---
 
 ## Context
@@ -90,3 +90,11 @@ client-side surface, and build/deploy configuration.
 - MDN: Security on the web — https://developer.mozilla.org/docs/Web/Security
 - Vercel security docs — https://vercel.com/docs/security
 - Resend API reference — https://resend.com/docs/api-reference
+
+## Closing
+
+Shipped as `research/security-review.md` (full public-surface review,
+reconciled with develop’s incremental IP-logging notes and the landed
+`stripHeaderControls` fix). Follow-ups for CSP/headers and IP
+minimization remain recommendations in that file — not blockers for
+closing this review-only plan.

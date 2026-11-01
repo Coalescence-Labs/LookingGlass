@@ -1,9 +1,9 @@
 ---
 title: Engineering — Verified sender domain for Resend
-status: not-started
+status: in-progress
 category: engineering
 effort: S
-last-updated: 2026-04-17
+last-updated: 2026-04-18
 ---
 
 ## Context
@@ -54,15 +54,29 @@ display name in Gmail.
 
 ## Files
 
-**Modify (Vercel env only — no code change needed):**
+**Repository (this PR):**
+- `.env.example` — documents `RESEND_API_KEY`, `SUBMIT_FROM_EMAIL`,
+  `SUBMIT_TO_EMAIL` for local setup; no secrets.
+- `.gitignore` — `!.env.example` so the template can be committed while
+  `.env.local` stays ignored.
+
+**Modify (Vercel + local secrets — human / dashboard):**
 - Vercel project → Settings → Environment Variables → `SUBMIT_FROM_EMAIL`.
-- `.env.local` (local dev) — same.
+- `.env.local` (local dev) — same values as production when testing sends.
 
 Optional code touch:
 - `src/app/api/submit/route.ts` — only if we want to change the display
-  name format ("Looking Glass" vs "Looking Glass <hello@…>").
+  name format ("Looking Glass" vs "Looking Glass <hello@…>"). Current
+  code already sends as `Looking Glass <address>`.
 
 ## Acceptance
+
+Repository work (agent / PR):
+
+- [x] Env template and ignore rules document the verified-domain workflow.
+
+Operator verification (after DNS + Vercel env flip — cannot be completed
+in CI):
 
 - [ ] Resend domain status = verified.
 - [ ] SPF, DKIM, DMARC all pass — check message headers in Gmail

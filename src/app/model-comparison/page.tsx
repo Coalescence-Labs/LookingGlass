@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
+import { SourceOutboundLink } from "@/components/site/SourceOutboundLink";
 import { Reveal } from "@/components/motion/Reveal";
 import { ModelCard } from "@/components/model-comparison/ModelCard";
 import { PriceChart } from "@/components/model-comparison/PriceChart";
@@ -247,15 +248,13 @@ export default function ModelComparisonPage() {
                     </span>
                     <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
                       {m.sources.map((s) => (
-                        <a
+                        <SourceOutboundLink
                           key={s.url}
                           href={s.url}
-                          target="_blank"
-                          rel="noreferrer"
                           className="type-mono-sm text-bone-3 hover:text-accent transition-colors"
                         >
                           {s.label} ↗
-                        </a>
+                        </SourceOutboundLink>
                       ))}
                     </div>
                   </li>

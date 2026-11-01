@@ -122,6 +122,18 @@ export default function AboutPage() {
                 adult with a little time and a lot of curiosity.
               </p>
               <p>
+                <span className="type-mono-sm text-bone-3">Privacy · </span>
+                We use Vercel Web Analytics for anonymized page views — no
+                analytics cookies, no ad pixels, nothing that follows you
+                across the web. We also log two coarse signals: when someone
+                successfully sends the idea form, and when a reader opens an
+                external citation from a piece (only the destination hostname,
+                never query strings or page titles). If your browser sends{" "}
+                <em>Do Not Track</em> or{" "}
+                <em>Global Privacy Control</em> (the Sec-GPC header), we skip
+                those tallies for your visit.
+              </p>
+              <p>
                 If any of that resonates, we&rsquo;d love to hear from you —
                 about a piece you&rsquo;d like us to write, a detail we got
                 wrong, or work you think we might be useful for.
@@ -214,11 +226,11 @@ export default function AboutPage() {
               })}
               <div className="border-t border-line pt-4">
                 <div className="flex items-baseline justify-between gap-4">
-                  <span className="type-mono-sm text-dim">Series II</span>
+                  <span className="type-mono-sm text-dim">Series III+</span>
                   <span className="type-mono-sm text-dim">In the kiln</span>
                 </div>
                 <p className="mt-2 type-mono-sm text-bone-3">
-                  Arrives when it&rsquo;s ready.
+                  New rooms open when they&rsquo;re ready.
                 </p>
               </div>
             </div>

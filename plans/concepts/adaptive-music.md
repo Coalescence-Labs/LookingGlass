@@ -1,10 +1,10 @@
 ---
 title: Concept — Adaptive music in games
-status: not-started
+status: in-progress
 category: concept
 effort: L
 series: "III — Everyday machines"
-last-updated: 2026-04-17
+last-updated: 2026-06-17
 ---
 
 ## Context
@@ -29,15 +29,15 @@ stealth) and hears the musical system respond in real time.
 
 ## Approach
 
-1. **Research.** Write `research/adaptive-music.md`. Primary sources:
-   Audiokinetic's Wwise documentation, Firelight's FMOD documentation,
-   published developer post-mortems (GDC talks: Hades, RDR2, Destiny),
-   academic work by Karen Collins on game audio.
-2. **Audio assets.** All sample stems must be original recordings or
-   CC0-licensed. No copyrighted game audio on the page. See House rules
-   in `plans/README.md`. Recommend recording 4–6 short original stems
-   (30–60 s) in a DAW — or using a CC0 library like FreePD's game tracks
-   with attribution.
+1. **Research.** See `research/adaptive-music/` (folder; index + 7 chunks +
+   numbers + visuals). Primary sources: Audiokinetic's Wwise documentation,
+   Firelight's FMOD documentation, published developer interviews (Hades,
+   RDR2, Destiny), academic work by Karen Collins on game audio.
+2. **Audio assets.** Decision (see `design/adaptive-music/`): all stems are
+   **synthesised live in the browser** with the Web Audio API (oscillators +
+   filtered noise) — provably original, no sample files, no copyrighted game
+   audio. This satisfies the House rules outright; no `public/audio/` assets
+   are shipped.
 3. **Demo mechanics.**
    - Web Audio API for mixing. No external audio library.
    - Three runtime parameters the reader can drive (slider or click):

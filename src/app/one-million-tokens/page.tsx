@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
+import { SourceOutboundLink } from "@/components/site/SourceOutboundLink";
 import { Reveal } from "@/components/motion/Reveal";
 import { StatRow, type StatRowItem } from "@/components/stats/StatRow";
 import { BigNumber } from "@/components/stats/BigNumber";
@@ -342,27 +343,23 @@ export default function OneMillionTokensPage() {
               Token-to-word ratio (≈ 0.75 English words per token, ≈ 4
               characters per token) is OpenAI&rsquo;s own rule of thumb,
               documented in their{" "}
-              <a
+              <SourceOutboundLink
                 href="https://platform.openai.com/tokenizer"
-                target="_blank"
-                rel="noreferrer"
                 className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
               >
                 tokenizer tool
-              </a>{" "}
+              </SourceOutboundLink>{" "}
               and pricing guides.
             </li>
             <li>
               Video and audio token rates (≈ 258 tokens/second video, ≈ 32
               tokens/second audio) follow Google&rsquo;s{" "}
-              <a
+              <SourceOutboundLink
                 href="https://ai.google.dev/gemini-api/docs/tokens"
-                target="_blank"
-                rel="noreferrer"
                 className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
               >
                 Gemini API documentation
-              </a>{" "}
+              </SourceOutboundLink>{" "}
               for default media sampling. Other providers publish similar
               figures; all three treat multimodal input as a budget of
               per-second tokens.

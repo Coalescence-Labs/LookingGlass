@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
+import { SourceOutboundLink } from "@/components/site/SourceOutboundLink";
 import { Reveal } from "@/components/motion/Reveal";
 import { ViewportDemo } from "@/components/context-window/ViewportDemo";
 import { ModelComparisonStrip } from "@/components/context-window/ModelComparisonStrip";
@@ -199,14 +200,12 @@ export default function ContextWindowPage() {
                         tokens
                       </span>
                     </span>
-                    <a
+                    <SourceOutboundLink
                       href={m.source}
-                      target="_blank"
-                      rel="noreferrer"
                       className="type-mono-sm text-bone-3 hover:text-accent transition-colors"
                     >
                       {new URL(m.source).hostname} ↗
-                    </a>
+                    </SourceOutboundLink>
                   </li>
                 ))}
               </ul>
@@ -233,14 +232,12 @@ export default function ContextWindowPage() {
                 </li>
                 <li>
                   &ldquo;Lost in the middle&rdquo; originates in{" "}
-                  <a
+                  <SourceOutboundLink
                     href="https://arxiv.org/abs/2307.03172"
-                    target="_blank"
-                    rel="noreferrer"
                     className="text-bone underline decoration-line-2 underline-offset-4 hover:decoration-accent"
                   >
                     Liu et al., 2023 (arXiv 2307.03172)
-                  </a>
+                  </SourceOutboundLink>
                   . Subsequent long-context models have reduced but not
                   eliminated the effect.
                 </li>

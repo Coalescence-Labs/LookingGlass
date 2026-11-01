@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/site/SiteNav";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { WebAnalytics } from "@/components/site/WebAnalytics";
+import { getSiteUrl } from "@/lib/site";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -25,7 +27,7 @@ const instrument = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lookingglass.coalescencelabs.app"),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "Looking Glass — a field guide to things worth understanding",
     template: "%s · Looking Glass",
@@ -36,7 +38,7 @@ export const metadata: Metadata = {
     title: "Looking Glass",
     description:
       "A field guide to things worth understanding. Considered, unhurried explainers by Coalescence Labs.",
-    url: "https://lookingglass.coalescencelabs.app",
+    url: getSiteUrl(),
     siteName: "Looking Glass",
     type: "website",
   },
@@ -65,6 +67,7 @@ export default function RootLayout({
         <SiteNav />
         <main className="flex-1">{children}</main>
         <SiteFooter />
+        <WebAnalytics />
       </body>
     </html>
   );
