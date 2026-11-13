@@ -140,6 +140,17 @@ export const concepts: Concept[] = [
     status: "live",
     readingTime: "6 min",
   },
+  {
+    index: "10",
+    slug: "noise-cancellation",
+    title: "How noise-cancelling headphones work",
+    subtitle:
+      "Anti-noise, feedforward and feedback loops, and why cancellation yields first on the low end — isolation is not the same trick.",
+    kicker: "On machines",
+    seriesId: "everyday-machines",
+    status: "live",
+    readingTime: "8 min",
+  },
 ];
 
 export function getConcept(slug: string) {

@@ -1,18 +1,21 @@
 ---
 name: ship-article
 description: >-
-  End-to-end Looking Glass concept article pipeline from a Linear ticket to an
+  End-to-end Looking Glass concept article pipeline from an Ergon ticket to an
   open PR on develop. Claims the ticket and plan, branches from develop, runs
   research → design → implement → humanize → review, fixes blockers, and opens
-  a PR. Commits and pushes after every phase so progress is saved remotely. Maintainer merges manually after reviewing the PR. Use when
-  the user gives a Linear issue, article topic, or asks to ship/build a concept.
+  a PR. Commits and pushes after every phase so progress is saved remotely.
+  Maintainer merges manually after reviewing the PR. Use when the user gives an
+  Ergon issue, article topic, or asks to ship/build a concept.
 ---
 
 # Ship article
 
-Orchestrates the full concept-article pipeline from **Linear ticket → open PR
+Orchestrates the full concept-article pipeline from **Ergon ticket → open PR
 on `develop`**. One article per run. Executes every child skill in order; the
 maintainer reviews the PR manually — **do not merge**.
+
+Issue tracking is **Ergon only** (MCP `user-ergon`). Never use Linear.
 
 ## Commit and push rule
 
@@ -51,8 +54,8 @@ skill.
 ## Preconditions
 
 - **`develop`** is the base branch (`git fetch origin develop`).
-- **Linear MCP** authenticated in Cursor (`mcp_get_tools` on server `Linear`
-  must not show `needsAuth`). See [`linear-integration.md`](linear-integration.md).
+- **Ergon MCP** authenticated (`GetDynamicTools` on `user-ergon` must not show
+  `needsAuth`). See [`ergon-integration.md`](ergon-integration.md).
 - **`gh`** CLI authenticated for PR creation (`gh auth status`), or create the
   PR in the GitHub UI using the pushed branch.
 - A matching **concept plan** exists: `plans/concepts/<slug>.md`.
@@ -64,9 +67,9 @@ Provide **one** of:
 
 | Input | Example |
 |-------|---------|
-| Linear issue ID | `COA-42`, `LG-123` |
-| Linear issue URL | `https://linear.app/…/issue/COA-42/…` |
-| Topic + issue | "Ship the solar life cycle article — Linear COA-42" |
+| Ergon issue ID | `COA-42`, `COA-463` |
+| Ergon issue URL | `https://ergon.coalescencelabs.app/issue/COA-42` |
+| Topic + issue | "Ship the solar life cycle article — Ergon COA-42" |
 | Plan path | `@plans/concepts/solar-life-cycle.md` (resolve slug from filename) |
 
 The ticket title/description should match a plan in `plans/concepts/`. If no
@@ -76,11 +79,11 @@ plan exists, **stop** and ask the maintainer to add one before shipping.
 
 1. Feature branch `plan/<slug>` pushed to origin
 2. **Draft or ready PR** into `develop` with summary, artifacts, and review verdict
-3. Linear issue **In Progress** at start → **In Review** (or equivalent) with PR link at end
+3. Ergon issue **In Progress** at start → **In Review** with walkable handoff + PR/preview links at end
 4. Run log: `ship/<slug>/run-YYYY-MM-DD.md` ([template](run-log-template.md))
 5. Plan remains `status: in-progress` until the maintainer merges (then `done`)
 
-**Out of scope for this skill:** merging the PR, marking Linear Done, or
+**Out of scope for this skill:** merging the PR, marking Ergon Done, or
 post-merge plan cleanup (maintainer handles after manual review).
 
 ## Push helper
@@ -119,7 +122,7 @@ git rev-parse "origin/plan/<slug>"   # must match after push
 
 ## Phase 0 — Resolve topic
 
-1. **Fetch the Linear issue** via MCP (see [`linear-integration.md`](linear-integration.md)).
+1. **Fetch the Ergon issue** via MCP (see [`ergon-integration.md`](ergon-integration.md)).
 2. Record: identifier, title, description, URL, current status.
 3. **Derive slug:**
    - Prefer slug in ticket description (`slug: solar-life-cycle`) or labels
@@ -132,15 +135,15 @@ git rev-parse "origin/plan/<slug>"   # must match after push
 
 ---
 
-## Phase 1 — Linear + git setup
+## Phase 1 — Ergon + git setup
 
-### 1a. Linear → In Progress
+### 1a. Ergon → In Progress
 
 Update the issue **before** writing code:
 
-- **Status** → team workflow state for in-progress (often `In Progress` /
-  `Started`). Discover valid states via Linear MCP if unsure.
-- **Comment** on the issue:
+- **Status** → `In Progress` via `save_issue` (discover names with
+  `list_issue_statuses` for team `COA` if unsure).
+- **Comment** via `save_comment`:
 
   ```text
   Agent started ship-article pipeline.
@@ -149,7 +152,7 @@ Update the issue **before** writing code:
   First commit pushed to origin before Phase 2.
   ```
 
-If Linear MCP is unavailable, **stop** and ask the user to authenticate or
+If Ergon MCP is unavailable, **stop** and ask the user to authenticate or
 update the ticket manually; do not proceed silently.
 
 ### 1b. Branch from develop
@@ -334,8 +337,11 @@ gh pr create --base develop --head plan/<slug> \
 ## Summary
 <1–3 sentences — what the reader gets from this concept>
 
-## Linear
-- Issue: <COA-NNN> — <url>
+## Ergon
+- Issue: <COA-NNN> — https://ergon.coalescencelabs.app/issue/<COA-NNN>
+
+## Preview
+- https://looking-glass-git-plan-<slug>-coalescence-labs.vercel.app/<slug>
 
 ## Artifacts
 - Plan: \`plans/concepts/<slug>.md\`
@@ -365,28 +371,20 @@ If `gh` is unavailable, push and give the compare URL:
 
 Use **draft PR** only if the user or team prefers; default **ready for review**.
 
-Update run log: PR URL, head SHA.
+Update run log: PR URL, preview URL, head SHA.
 
 ---
 
-## Phase 8 — Linear handoff (post-PR)
+## Phase 8 — Ergon handoff (post-PR)
 
-Update the Linear issue:
+Update the Ergon issue (see [`ergon-integration.md`](ergon-integration.md)):
 
-- **Status** → in-review state (e.g. `In Review`, `Review`, or keep `In Progress`
-  with PR linked — match team workflow)
-- **Comment:**
+- **Status** → `In Review`
+- **Description** → walkable handoff (What shipped / Which preview / Where to look / Skip / Acceptance)
+- **Links** → GitHub PR + Vercel preview deep link (`save_issue` `links`)
+- **Comment** with PR URL, preview, review verdict, run log path
 
-  ```text
-  PR ready for manual review: <PR URL>
-  Branch: plan/<slug>
-  Review verdict: <Approve | Approve with nits>
-  Run log: ship/<slug>/run-YYYY-MM-DD.md
-  ```
-
-- **Link PR** in issue if Linear MCP supports attachment/link fields
-
-**Do not** set Linear to Done or plan to `done` — the maintainer does that after
+**Do not** set Ergon to Done or plan to `done` — the maintainer does that after
 merge and any PR adjustments.
 
 Commit run log final state and push:
@@ -404,7 +402,7 @@ git push
 Post to the user:
 
 1. PR link
-2. Linear issue link + status
+2. Ergon issue link + status + preview deep link
 3. Route: `/<slug>`
 4. Review verdict summary (nits only, or all clear)
 5. Explicit note: **awaiting your manual PR review** — no merge performed
@@ -415,8 +413,8 @@ Post to the user:
 
 Copy into the run log and check off:
 
-- [ ] Linear issue fetched; slug resolved; plan exists
-- [ ] Linear → In Progress + start comment
+- [ ] Ergon issue fetched; slug resolved; plan exists
+- [ ] Ergon → In Progress + start comment
 - [ ] Branch `plan/<slug>` from `develop`
 - [ ] Plan claimed `in-progress` — **committed + pushed**
 - [ ] `research/<slug>/` complete — **committed + pushed**
@@ -427,7 +425,7 @@ Copy into the run log and check off:
 - [ ] `reviews/<slug>/` — Approve or Approve with nits — **committed + pushed**
 - [ ] Remote `origin/plan/<slug>` matches local HEAD before PR
 - [ ] PR open against `develop`
-- [ ] Linear updated with PR link
+- [ ] Ergon → In Review with walkable handoff + PR/preview links
 - [ ] Run log complete in `ship/<slug>/`
 - [ ] **Maintainer manual review** — out of scope; not merged
 
@@ -436,7 +434,7 @@ Copy into the run log and check off:
 | Failure | Action |
 |---------|--------|
 | No plan for topic | Stop; list closest plans in `plans/concepts/` |
-| Linear MCP auth | Stop; link [`linear-integration.md`](linear-integration.md) |
+| Ergon MCP auth | Stop; link [`ergon-integration.md`](ergon-integration.md) |
 | Research blocked | Document in research open questions; continue only if non-blocker |
 | Build fails | Fix before next phase; never open PR on red build |
 | Review Critical | Fix loop in Phase 6 |
@@ -445,7 +443,7 @@ Copy into the run log and check off:
 
 ## Additional resources
 
-- Linear MCP: [linear-integration.md](linear-integration.md)
+- Ergon MCP: [ergon-integration.md](ergon-integration.md)
 - Run log template: [run-log-template.md](run-log-template.md)
 - Pipeline diagram: [pipeline-overview.md](pipeline-overview.md)
 - Ship folder: [`ship/README.md`](../../../ship/README.md)
